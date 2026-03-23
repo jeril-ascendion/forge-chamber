@@ -1,8 +1,4 @@
-import json
 import logging
-import uuid
-from datetime import datetime
-from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, UploadFile
 
@@ -13,63 +9,53 @@ from backend.api.models import (
     RagSourceResponse,
 )
 from backend.core.config import settings
+from backend.rag.ingester import (
+    delete_source as do_delete_source,
+    ingest_file as do_ingest_file,
+    ingest_url as do_ingest_url,
+    list_ingested_sources,
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/rag", tags=["rag"])
 
-SOURCES_FILE = Path(settings.forge_data_dir) / "sources.json"
-
-
-def _load_sources() -> list[dict]:
-    if SOURCES_FILE.exists():
-        return json.loads(SOURCES_FILE.read_text())
-    return []
-
-
-def _save_sources(sources: list[dict]) -> None:
-    SOURCES_FILE.parent.mkdir(parents=True, exist_ok=True)
-    SOURCES_FILE.write_text(json.dumps(sources, indent=2))
-
 
 @router.post("/ingest-url", response_model=IngestResponse)
 async def ingest_url(body: IngestUrlRequest) -> IngestResponse:
-    """Ingest a URL into the RAG pipeline. Full implementation in E6."""
-    source_id = str(uuid.uuid4())
-    sources = _load_sources()
-    sources.append({
-        "id": source_id,
-        "label": body.url,
-        "chunks": 0,
-        "ingested_at": datetime.utcnow().isoformat(),
-    })
-    _save_sources(sources)
-
-    logger.info("RAG ingest-url stub: %s", body.url)
-    return IngestResponse(status="ingested", chunks=0, title=body.url)
+    """Ingest a URL into the RAG pipeline."""
+    try:
+        result = do_ingest_url(body.url, settings.forge_data_dir)
+        return IngestResponse(
+            status=result["status"],
+            chunks=result["chunks"],
+            title=result["title"],
+        )
+    except Exception as exc:
+        logger.error("URL ingestion failed: %s", exc)
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {exc}")
 
 
 @router.post("/ingest-file", response_model=IngestResponse)
 async def ingest_file(file: UploadFile) -> IngestResponse:
-    """Ingest an uploaded file into the RAG pipeline. Full implementation in E6."""
-    source_id = str(uuid.uuid4())
+    """Ingest an uploaded file into the RAG pipeline."""
     filename = file.filename or "unnamed"
-
-    sources = _load_sources()
-    sources.append({
-        "id": source_id,
-        "label": filename,
-        "chunks": 0,
-        "ingested_at": datetime.utcnow().isoformat(),
-    })
-    _save_sources(sources)
-
-    logger.info("RAG ingest-file stub: %s", filename)
-    return IngestResponse(status="ingested", chunks=0, title=filename)
+    try:
+        content = await file.read()
+        result = do_ingest_file(content, filename, settings.forge_data_dir)
+        return IngestResponse(
+            status=result["status"],
+            chunks=result["chunks"],
+            title=result["title"],
+        )
+    except Exception as exc:
+        logger.error("File ingestion failed for %s: %s", filename, exc)
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {exc}")
 
 
 @router.get("/sources", response_model=list[RagSourceResponse])
 async def list_sources() -> list[RagSourceResponse]:
-    sources = _load_sources()
+    """List all ingested sources."""
+    sources = list_ingested_sources(settings.forge_data_dir)
     return [
         RagSourceResponse(
             id=s["id"],
@@ -83,9 +69,8 @@ async def list_sources() -> list[RagSourceResponse]:
 
 @router.delete("/source/{source_id}", response_model=DeleteSourceResponse)
 async def delete_source(source_id: str) -> DeleteSourceResponse:
-    sources = _load_sources()
-    filtered = [s for s in sources if s["id"] != source_id]
-    if len(filtered) == len(sources):
+    """Delete a source and its chunks from the RAG pipeline."""
+    deleted = do_delete_source(source_id, settings.forge_data_dir)
+    if not deleted:
         raise HTTPException(status_code=404, detail="Source not found.")
-    _save_sources(filtered)
     return DeleteSourceResponse(status="deleted")

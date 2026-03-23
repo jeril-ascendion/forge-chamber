@@ -51,6 +51,7 @@ class DebateState(TypedDict):
     session_id: str
     current_seed: str
     max_turns: int
+    data_dir: str
 
 
 def initial_state(
@@ -59,6 +60,7 @@ def initial_state(
     session_id: str,
     rag_context: str = "",
     max_turns: int = 20,
+    data_dir: str = "./data",
 ) -> DebateState:
     return DebateState(
         topic=topic,
@@ -72,6 +74,7 @@ def initial_state(
         session_id=session_id,
         current_seed="",
         max_turns=max_turns,
+        data_dir=data_dir,
     )
 
 
@@ -173,10 +176,23 @@ async def generate_turn(state: DebateState) -> DebateState:
     persona = PERSONAS[speaker_key]
     transcript_text = _format_transcript_last_n(state["transcript"], 8)
 
+    # Retrieve RAG context for this turn (non-blocking — falls back to empty)
+    rag_context = state["rag_context"]
+    if state.get("data_dir"):
+        try:
+            from backend.rag.retriever import retrieve_for_agent_turn
+
+            last_texts = [t["text"] for t in state["transcript"][-2:] if t.get("text")]
+            retrieved = retrieve_for_agent_turn(last_texts, state["data_dir"])
+            if retrieved:
+                rag_context = retrieved
+        except Exception as exc:
+            logger.warning("RAG retrieval failed for turn %d: %s", state["turn_count"], exc)
+
     system_prompt = format_system_prompt(
         agent_key=speaker_key,
         topic=state["topic"],
-        rag_context=state["rag_context"],
+        rag_context=rag_context,
         transcript=transcript_text,
     )
 

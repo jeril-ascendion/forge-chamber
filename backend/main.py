@@ -26,6 +26,11 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Startup
     await init_db()
+    # Load embedding model + init ChromaDB (before any routes)
+    from backend.rag.embedder import init_embedder, get_chroma_collection
+
+    init_embedder()
+    get_chroma_collection(settings.forge_data_dir)
     logger.info(
         "Forge Chamber backend ready on port %s (data_dir=%s)",
         settings.forge_port,

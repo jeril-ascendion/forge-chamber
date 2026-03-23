@@ -36,6 +36,7 @@ class DebateEngine:
         rag_context: str = "",
         max_turns: int = 20,
         data_callback: DataCallback | None = None,
+        data_dir: str = "./data",
     ) -> None:
         self.state = initial_state(
             topic=topic,
@@ -43,6 +44,7 @@ class DebateEngine:
             session_id=session_id,
             rag_context=rag_context,
             max_turns=max_turns,
+            data_dir=data_dir,
         )
         self._data_callback = data_callback
         self._human_event = asyncio.Event()
