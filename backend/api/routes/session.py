@@ -57,7 +57,12 @@ def _generate_livekit_token(engineer_name: str, room_name: str) -> str:
         return "livekit-token-placeholder"
 
 
-async def _dispatch_agent_to_room(room_name: str, agent_key: str) -> None:
+async def _dispatch_agent_to_room(
+    room_name: str,
+    topic: str,
+    agents: list[str],
+    session_id: str,
+) -> None:
     """Create a LiveKit room and dispatch the agent worker to it."""
     try:
         from livekit import api as lk_api
@@ -68,11 +73,18 @@ async def _dispatch_agent_to_room(room_name: str, agent_key: str) -> None:
 
         lk_client = lk_api.LiveKitAPI(lk_url, lk_key, lk_secret)
 
+        # Room metadata carries debate config for the worker
+        room_metadata = json.dumps({
+            "topic": topic,
+            "agents": agents,
+            "session_id": session_id,
+        })
+
         # Create the room (idempotent — returns existing if already exists)
         await lk_client.room.create_room(
             lk_api.CreateRoomRequest(
                 name=room_name,
-                metadata=agent_key,
+                metadata=room_metadata,
             )
         )
 
@@ -81,12 +93,12 @@ async def _dispatch_agent_to_room(room_name: str, agent_key: str) -> None:
             lk_api.CreateAgentDispatchRequest(
                 room=room_name,
                 agent_name="forge-chamber-agent",
-                metadata=agent_key,
+                metadata=room_metadata,
             )
         )
 
         await lk_client.aclose()
-        logger.info("Agent dispatched to room %s (agent_key=%s)", room_name, agent_key)
+        logger.info("Agent dispatched to room %s (topic=%s, agents=%s)", room_name, topic, agents)
     except Exception as exc:
         logger.warning("Agent dispatch failed: %s — worker will pick up via room events", exc)
 
@@ -116,8 +128,7 @@ async def start_session(
     livekit_token = _generate_livekit_token(engineer.name, room_name)
 
     # Dispatch agent worker to the LiveKit room
-    agent_key = body.agents[0] if body.agents else "sre"
-    await _dispatch_agent_to_room(room_name, agent_key)
+    await _dispatch_agent_to_room(room_name, body.topic, body.agents, session.id)
 
     return SessionStartResponse(
         livekit_url=livekit_url,
