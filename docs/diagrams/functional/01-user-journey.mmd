@@ -1,0 +1,26 @@
+%% Title: User Journey
+%% Description: End-to-end flow from first launch to skill progression
+
+flowchart TD
+    A[First Launch] --> B{API Keys<br/>Configured?}
+    B -- No --> C[Onboarding Page]
+    C --> D[Enter Name, Role,<br/>Skill Level]
+    D --> E[Configure 6 API Keys]
+    E --> F[Keys Saved to Keychain]
+    F --> G[POST /engineer/setup]
+    G --> H[Dashboard]
+
+    B -- Yes --> H
+    H --> I[Choose Topic +<br/>Select Agents]
+    I --> J[Room Setup]
+    J --> K[Add Context<br/>URLs/Files]
+    K --> L[Start Room]
+    L --> M[Live Debate Session]
+    M --> N[Listen to Agents<br/>Join When Ready]
+    N --> O[Session Ends]
+    O --> P[Debrief Generated]
+    P --> Q[Review Scores +<br/>Knowledge Gaps]
+    Q --> R[XP Earned]
+    R --> S{Another<br/>Session?}
+    S -- Yes --> H
+    S -- No --> T[View Progress]

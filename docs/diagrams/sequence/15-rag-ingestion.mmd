@@ -1,0 +1,28 @@
+%% Title: RAG Ingestion Sequence
+%% Description: Step-by-step sequence for ingesting a URL into the RAG pipeline
+
+sequenceDiagram
+    participant U as User
+    participant FE as ContextDrop
+    participant API as FastAPI
+    participant Ing as ingester.py
+    participant LI as LlamaIndex
+    participant Emb as Embedder
+    participant Chr as ChromaDB
+
+    U->>FE: Paste URL + click Add
+    FE->>API: POST /rag/ingest-url
+    API->>Ing: ingest_url(url, data_dir)
+    Ing->>LI: SimpleWebPageReader.load_data([url])
+    LI-->>Ing: Document (cleaned text)
+    Ing->>LI: SentenceSplitter(500, 50)
+    LI-->>Ing: N text chunks
+    Ing->>Emb: embed(chunks)
+    Emb->>Emb: all-MiniLM-L6-v2 encode
+    Emb-->>Ing: N x 384-dim vectors
+    Ing->>Chr: collection.upsert(ids, embeddings, docs, metadata)
+    Chr-->>Ing: OK
+    Ing->>Ing: Update sources.json
+    Ing-->>API: {status: ingested, chunks: N}
+    API-->>FE: IngestResponse
+    FE->>FE: Show source chip

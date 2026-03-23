@@ -1,0 +1,25 @@
+%% Title: Debate Session Lifecycle
+%% Description: What happens during a live multi-agent debate session
+
+flowchart TD
+    A[Room Active Page] --> B[Worker Joins Room]
+    B --> C[Greeting Spoken via TTS]
+    C --> D[Orchestrator: route_turn<br/>Pick Next Speaker]
+    D --> E[generate_turn<br/>Agent Utterance via Groq]
+    E --> F[Publish speaker_change<br/>+ turn_committed]
+    F --> G[TTS Speaks Turn<br/>via Cartesia]
+    G --> H{Human Silent<br/>5+ Turns?}
+    H -- No --> I{Max Turns<br/>Reached?}
+    I -- No --> D
+    I -- Yes --> M[Session Ends]
+    H -- Yes --> J[Generate Quiz Question]
+    J --> K[Publish quiz_event]
+    K --> L{Human Responds<br/>in 30s?}
+    L -- Yes --> N[Record Human Turn<br/>Reset Silent Count]
+    N --> D
+    L -- No --> O[Agent Self-Answers]
+    O --> D
+    M --> P[Synthesize Debrief<br/>via Groq]
+    P --> Q[Calculate XP]
+    Q --> R[POST /session/end]
+    R --> S[Navigate to Debrief]

@@ -1,0 +1,41 @@
+%% Title: Multi-Platform Architecture
+%% Description: How one React codebase serves desktop, web, and mobile
+
+graph TD
+    subgraph Shared["frontend/ — One React Codebase"]
+        App[App.tsx + Router]
+        Pages[7 Pages]
+        Comps[10 Components]
+        Hook[usePlatform Hook]
+    end
+
+    subgraph DesktopShell["desktop/ — Electron Shell"]
+        Electron[Electron 28<br/>main.js + preload.js]
+        Sidecar[Bundled Backend<br/>PyInstaller .exe]
+        Keytar[electron-keytar<br/>OS Keychain]
+    end
+
+    subgraph WebDeploy["Web Deployment"]
+        S3[S3 + CloudFront<br/>Static Build]
+        ServerAPI[Backend on EC2/ECS<br/>HTTPS API]
+    end
+
+    subgraph MobileShell["mobile/ — Capacitor Shell"]
+        Cap[Capacitor 6<br/>iOS + Android]
+        Native[Native Plugins<br/>Microphone, FileSystem]
+    end
+
+    Hook -->|isElectron| Electron
+    Hook -->|isWeb| S3
+    Hook -->|isNative| Cap
+
+    Electron --> Sidecar
+    Electron --> Keytar
+    App --> Pages --> Comps
+    App --> Hook
+
+    S3 -->|HTTPS| ServerAPI
+    Cap -->|HTTPS| ServerAPI
+
+    Sidecar -->|localhost:8765| App
+    ServerAPI -->|api.forgechamber.ascendion.com| App

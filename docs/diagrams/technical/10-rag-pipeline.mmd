@@ -1,0 +1,33 @@
+%% Title: RAG Pipeline Architecture
+%% Description: Document ingestion, embedding, storage, and retrieval flow
+
+graph TD
+    subgraph Ingest["Ingestion — ingester.py"]
+        URL[URL Input] --> WPR[SimpleWebPageReader<br/>HTML to Text]
+        File[File Upload] --> FP{File Type}
+        FP -- PDF --> PDFr[PDFReader]
+        FP -- DOCX --> DOCr[DocxReader]
+        FP -- TXT/MD --> UTF[UTF-8 Decode]
+        WPR --> Text[Raw Text]
+        PDFr --> Text
+        DOCr --> Text
+        UTF --> Text
+        Text --> Split[SentenceSplitter<br/>500 tokens / 50 overlap]
+    end
+
+    subgraph Embed["Embedding — embedder.py"]
+        Split --> Enc[all-MiniLM-L6-v2<br/>Sentence Transformers]
+        Enc --> Vecs[384-dim Vectors]
+    end
+
+    subgraph Store["Storage"]
+        Vecs --> Chroma[(ChromaDB<br/>PersistentClient<br/>forge_context)]
+        Meta[sources.json<br/>Source Metadata]
+    end
+
+    subgraph Retrieve["Retrieval — retriever.py"]
+        Query[Last 2 Utterances] --> QEnc[Embed Query]
+        QEnc --> Search[ChromaDB Query<br/>Top 4 Chunks]
+        Search --> Ctx[Context Block<br/>== REFERENCE MATERIAL ==]
+        Ctx --> Prompt[Injected into<br/>Agent System Prompt]
+    end

@@ -1,0 +1,25 @@
+%% Title: Debrief and Skills Progression
+%% Description: How session results turn into skill scores and XP
+
+flowchart TD
+    A[Session Ends] --> B[Full Transcript<br/>Sent to Synthesizer]
+    B --> C[Groq llama-3.3-70b<br/>Analyzes Transcript]
+    C --> D[Structured JSON Debrief]
+    D --> E[4 Skill Scores<br/>1.0-5.0 Scale]
+    D --> F[Key Insights]
+    D --> G[Knowledge Gaps]
+    D --> H[Strong Moments]
+
+    E --> I[Running Average<br/>per Domain]
+    I --> J[Update skill_scores<br/>in SQLite]
+
+    E --> K[XP Calculation]
+    K --> L[Base: 50]
+    K --> M[Participation: +10/turn]
+    K --> N[Quiz Bonus: +25/answered]
+    K --> O[Score Bonus: avg * 20]
+    L & M & N & O --> P[Total XP]
+
+    P --> Q[Update engineer.total_xp]
+    J --> R[SkillRadar SVG<br/>on Progress Page]
+    P --> S[XP Bar Level Up]

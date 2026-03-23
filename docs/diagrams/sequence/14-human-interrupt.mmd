@@ -1,0 +1,34 @@
+%% Title: Human Interrupt and Quiz Flow
+%% Description: What happens when a student speaks or is quizzed during debate
+
+sequenceDiagram
+    participant U as Student
+    participant LK as LiveKit Room
+    participant VAD as Silero VAD
+    participant STT as Deepgram STT
+    participant Eng as DebateEngine
+    participant Groq as Groq LLM
+    participant FE as Frontend
+
+    Note over Eng: human_silent_turns >= 5
+
+    Eng->>Groq: Generate quiz question
+    Groq-->>Eng: "What's your take on...?"
+    Eng->>LK: Publish quiz_event
+    LK-->>FE: quiz_event displayed
+    Eng->>Eng: Start 30s timer
+
+    alt Student Speaks
+        U->>LK: Mic audio
+        LK->>VAD: Audio frames
+        VAD->>STT: Speech detected
+        STT-->>Eng: "I think we should..."
+        Eng->>Eng: add_human_turn(text)
+        Eng->>Eng: human_silent_turns = 0
+        Eng->>Eng: Resume debate loop
+    else 30s Timeout
+        Eng->>Groq: Agent self-answers
+        Groq-->>Eng: "Let me answer that..."
+        Eng->>LK: Publish turn_committed
+        Eng->>Eng: Resume debate loop
+    end

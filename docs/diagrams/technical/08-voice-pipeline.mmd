@@ -1,0 +1,35 @@
+%% Title: Voice Pipeline Architecture
+%% Description: Audio flow from user microphone through STT/TTS to agent speech
+
+graph LR
+    subgraph User["User Device"]
+        Mic[Microphone]
+        Speaker[Speaker]
+        LKClient[livekit-client<br/>WebRTC]
+    end
+
+    subgraph LiveKit["LiveKit Cloud"]
+        Room[WebRTC Room<br/>Audio Routing]
+        DataCh[Data Channel<br/>JSON Messages]
+    end
+
+    subgraph Worker["LiveKit Agent Worker"]
+        VAD[Silero VAD<br/>Voice Activity]
+        STT[Deepgram nova-2<br/>Speech-to-Text]
+        LLM[Groq LLM<br/>llama-3.3-70b]
+        TTS[Cartesia TTS<br/>Per-Agent Voice]
+        Engine[Debate Engine<br/>Orchestrator]
+    end
+
+    Mic -->|Audio Stream| LKClient
+    LKClient <-->|WebRTC| Room
+    Room --> VAD
+    VAD -->|Speech Detected| STT
+    STT -->|Transcript| Engine
+    Engine -->|Agent Prompt| LLM
+    LLM -->|Utterance Text| TTS
+    TTS -->|Audio Stream| Room
+    Room -->|Audio| LKClient
+    LKClient --> Speaker
+    Engine -->|turn_committed<br/>speaker_change| DataCh
+    DataCh --> LKClient

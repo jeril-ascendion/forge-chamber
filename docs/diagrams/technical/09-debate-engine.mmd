@@ -1,0 +1,29 @@
+%% Title: Debate Engine — LangGraph Orchestrator
+%% Description: State machine for multi-agent debate turn management
+
+flowchart TD
+    START([Entry]) --> RT[route_turn<br/>Groq 8b-instant<br/>Pick Next Speaker]
+
+    RT --> GT[generate_turn<br/>Groq 70b-versatile<br/>Agent Utterance]
+
+    GT --> CHK{turn_count<br/>>= max_turns?}
+    CHK -- Yes --> DONE([END<br/>Synthesize Debrief])
+    CHK -- No --> DQ[detect_quiz<br/>Check Silent Count]
+
+    DQ --> QZ{human_silent<br/>>= 5?}
+    QZ -- No --> RT
+    QZ -- Yes --> GQ[Generate Quiz<br/>Question via Groq]
+    GQ --> PUB[Publish quiz_event]
+    PUB --> WH[wait_for_human<br/>30s Timeout]
+
+    WH --> ANS{Human<br/>Responded?}
+    ANS -- Yes --> RD[resume_debate<br/>Reset Silent Count]
+    ANS -- No --> SA[Agent Self-Answers<br/>Own Question]
+    SA --> RD
+    RD --> RT
+
+    style RT fill:#2B5EA7,color:#fff
+    style GT fill:#1D9E75,color:#fff
+    style DQ fill:#BA7517,color:#fff
+    style WH fill:#7F77DD,color:#fff
+    style DONE fill:#E8533A,color:#fff

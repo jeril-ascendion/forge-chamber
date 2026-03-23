@@ -1,0 +1,37 @@
+%% Title: Voice Session Lifecycle
+%% Description: Full sequence from session start to debrief generation
+
+sequenceDiagram
+    participant U as User (Browser)
+    participant FE as React Frontend
+    participant API as FastAPI Backend
+    participant LK as LiveKit Cloud
+    participant W as Agent Worker
+
+    U->>FE: Click "Start Room"
+    FE->>API: POST /session/start
+    API->>API: Create Room + Session in DB
+    API->>API: Generate LiveKit JWT Token
+    API->>LK: CreateRoom + AgentDispatch
+    API-->>FE: {livekit_url, token, session_id}
+    FE->>LK: Connect to Room (WebRTC)
+    LK->>W: Job Dispatch (room metadata)
+    W->>LK: Connect to Room
+    W->>LK: Say greeting (Cartesia TTS)
+    LK-->>FE: Audio stream + Data channel
+
+    loop Each Debate Turn
+        W->>W: route_turn (Groq 8b)
+        W->>W: generate_turn (Groq 70b)
+        W->>LK: Publish speaker_change
+        W->>LK: TTS audio stream
+        W->>LK: Publish turn_committed
+        LK-->>FE: Data + Audio
+        FE->>FE: Update TranscriptFeed
+    end
+
+    U->>FE: Click "End Session"
+    FE->>API: POST /session/{id}/end
+    API->>API: Save transcript + scores
+    API-->>FE: {debrief, scores, xp}
+    FE->>FE: Navigate to Debrief page

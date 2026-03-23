@@ -1,0 +1,23 @@
+%% Title: Room Creation Flow
+%% Description: Steps from topic selection to live debate room
+
+flowchart TD
+    A[Dashboard] --> B[Enter Topic or<br/>Pick Preset]
+    B --> C[Select 2-5 Agents]
+    C --> D[Navigate to<br/>Room Setup]
+    D --> E[Confirm Topic]
+    E --> F[Review Agent Cards]
+    F --> G[Select User Role]
+    G --> H{Add Context?}
+    H -- URL --> I[POST /rag/ingest-url]
+    H -- File --> J[POST /rag/ingest-file]
+    I --> K[Chunks Embedded<br/>in ChromaDB]
+    J --> K
+    H -- Skip --> L[Click Start Room]
+    K --> L
+    L --> M[POST /session/start]
+    M --> N[Create Room + Session<br/>in SQLite]
+    N --> O[Generate LiveKit Token]
+    O --> P[Dispatch Agent Worker<br/>via LiveKit API]
+    P --> Q[Navigate to<br/>Room Active]
+    Q --> R[Connect to LiveKit Room]

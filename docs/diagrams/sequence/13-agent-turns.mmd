@@ -1,0 +1,29 @@
+%% Title: Agent Turn Generation
+%% Description: How the orchestrator picks a speaker and generates an utterance
+
+sequenceDiagram
+    participant Eng as DebateEngine
+    participant Orch as Orchestrator
+    participant Groq8 as Groq 8b-instant
+    participant Groq70 as Groq 70b-versatile
+    participant RAG as Retriever
+    participant Chroma as ChromaDB
+    participant CB as DataCallback
+
+    Eng->>Orch: route_turn(state)
+    Orch->>Groq8: Pick next speaker<br/>(JSON: next_speaker, seed)
+    Groq8-->>Orch: {"next_speaker":"sre","seed":"..."}
+    Orch-->>Eng: state.active_speaker = "sre"
+
+    Eng->>CB: {type: speaker_change, agent: Alex}
+    Eng->>Orch: generate_turn(state)
+    Orch->>RAG: retrieve_for_agent_turn(last 2 utterances)
+    RAG->>Chroma: query(text, n=4)
+    Chroma-->>RAG: Top 4 chunks
+    RAG-->>Orch: Context block
+    Orch->>Orch: Build system prompt<br/>+ RAG context + transcript
+    Orch->>Groq70: Generate utterance
+    Groq70-->>Orch: "I strongly believe..."
+    Orch-->>Eng: state.transcript += new turn
+
+    Eng->>CB: {type: turn_committed,<br/>speaker: Alex, text: "..."}

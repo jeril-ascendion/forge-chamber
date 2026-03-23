@@ -1,0 +1,67 @@
+%% Title: Database Entity Relationship Diagram
+%% Description: SQLite schema with all 5 tables and their relationships
+
+erDiagram
+    engineers {
+        string id PK
+        string name
+        string role_track
+        string skill_level
+        datetime created_at
+        int total_xp
+        int total_sessions
+    }
+
+    skill_scores {
+        string id PK
+        string engineer_id FK
+        string domain
+        float score
+        int session_count
+        datetime updated_at
+    }
+
+    rooms {
+        string id PK
+        string engineer_id FK
+        string topic
+        string agents
+        string user_role
+        string context_sources
+        datetime created_at
+    }
+
+    sessions {
+        string id PK
+        string room_id FK
+        string engineer_id FK
+        datetime started_at
+        datetime ended_at
+        int duration_seconds
+        int xp_earned
+        text transcript
+        text debrief
+        float technical_depth_score
+        float communication_score
+        float debate_resilience_score
+        float ai_native_score
+    }
+
+    turns {
+        string id PK
+        string session_id FK
+        string speaker_type
+        string speaker_key
+        string speaker_name
+        text text
+        bool is_quiz_event
+        bool quiz_answered
+        int turn_number
+        datetime created_at
+    }
+
+    engineers ||--o{ skill_scores : "has"
+    engineers ||--o{ rooms : "creates"
+    engineers ||--o{ sessions : "participates"
+    rooms ||--o{ sessions : "contains"
+    sessions ||--o{ turns : "has"

@@ -1,0 +1,21 @@
+%% Title: Context Ingestion Flow
+%% Description: How URLs and files become RAG context for debate agents
+
+flowchart TD
+    A[User Adds Context] --> B{URL or File?}
+    B -- URL --> C[POST /rag/ingest-url]
+    C --> D[SimpleWebPageReader<br/>Fetches + Cleans HTML]
+    B -- File --> E[POST /rag/ingest-file]
+    E --> F{File Type?}
+    F -- PDF --> G[PDFReader]
+    F -- DOCX --> H[DocxReader]
+    F -- TXT/MD --> I[UTF-8 Decode]
+    G --> J[Extracted Text]
+    H --> J
+    I --> J
+    D --> J
+    J --> K[SentenceSplitter<br/>500 tokens, 50 overlap]
+    K --> L[all-MiniLM-L6-v2<br/>Embed Chunks]
+    L --> M[Upsert to ChromaDB<br/>forge_context collection]
+    M --> N[Update sources.json<br/>with Metadata]
+    N --> O[Source Chip Shown<br/>in ContextDrop UI]

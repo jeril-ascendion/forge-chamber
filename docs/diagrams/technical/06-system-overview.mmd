@@ -1,0 +1,45 @@
+%% Title: System Overview
+%% Description: High-level architecture of all Forge Chamber components
+
+graph LR
+    subgraph Frontend["frontend/ — React 18 + Vite"]
+        UI[React App<br/>7 Pages, 10 Components]
+        Store[Zustand Store]
+        Platform[usePlatform Hook]
+    end
+
+    subgraph Desktop["desktop/ — Electron 28"]
+        Main[main.js<br/>Sidecar Manager]
+        Preload[preload.js<br/>IPC Bridge]
+    end
+
+    subgraph Backend["backend/ — FastAPI + Python"]
+        API[FastAPI<br/>14 REST Endpoints]
+        DB[(SQLite<br/>5 Tables)]
+        Agents[Debate Engine<br/>5 Personas + LangGraph]
+        RAG[RAG Pipeline<br/>ChromaDB + Embeddings]
+        Voice[LiveKit Worker<br/>Voice I/O]
+    end
+
+    subgraph External["External Services"]
+        LK[LiveKit Cloud<br/>WebRTC Rooms]
+        Groq[Groq API<br/>LLM Inference]
+        DG[Deepgram<br/>Speech-to-Text]
+        Cart[Cartesia<br/>Text-to-Speech]
+    end
+
+    UI <--> Store
+    UI <--> Platform
+    Platform <--> Preload
+    Preload <--> Main
+    Main -->|spawn + /health poll| API
+    UI -->|HTTP REST| API
+    API <--> DB
+    API --> Agents
+    API --> RAG
+    Voice <-->|LiveKit SDK| LK
+    UI <-->|WebRTC Audio + Data| LK
+    Agents -->|llama-3.3-70b| Groq
+    Voice --> DG
+    Voice --> Cart
+    RAG -->|all-MiniLM-L6-v2| DB

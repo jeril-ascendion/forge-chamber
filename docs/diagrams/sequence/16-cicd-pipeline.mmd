@@ -1,0 +1,52 @@
+%% Title: CI/CD and Build Pipeline
+%% Description: Build and distribution flow for desktop, web, and mobile
+
+flowchart LR
+    subgraph Dev["Development"]
+        Code[Push to develop]
+    end
+
+    subgraph CI["CI Pipeline"]
+        Lint[ESLint + Pylint]
+        TSC[tsc --noEmit]
+        Test[pytest + vitest]
+        Lint --> TSC --> Test
+    end
+
+    subgraph Build["Build Artifacts"]
+        subgraph Desktop["Desktop Build"]
+            PY[PyInstaller<br/>forge_chamber.exe]
+            VB[Vite Build<br/>frontend/dist/]
+            EB[electron-builder<br/>NSIS Installer]
+            PY --> EB
+            VB --> EB
+        end
+
+        subgraph Web["Web Build"]
+            VBW[Vite Build<br/>VITE_API_URL set]
+            S3[Deploy to S3<br/>+ CloudFront]
+            VBW --> S3
+        end
+
+        subgraph Mobile["Mobile Build"]
+            VBM[Vite Build]
+            Cap[Capacitor Sync]
+            IOS[Xcode .ipa]
+            AND[Android Studio .apk]
+            VBM --> Cap --> IOS
+            Cap --> AND
+        end
+    end
+
+    subgraph Dist["Distribution"]
+        GH[GitHub Releases<br/>Auto-Update]
+        CF[CloudFront CDN]
+        AS[App Store / Play Store]
+    end
+
+    Code --> CI
+    CI --> Build
+    EB --> GH
+    S3 --> CF
+    IOS --> AS
+    AND --> AS
