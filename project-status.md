@@ -11,7 +11,7 @@ Active branch: develop
 | E2 | Electron Shell & App Infrastructure | ✅ Complete | 100% |
 | E3 | Python Sidecar & FastAPI Backend | ✅ Complete | 100% |
 | E4 | Voice Pipeline Integration | ✅ Complete | 100% |
-| E5 | Multi-Agent Debate Engine | ⬜ Not Started | 0% |
+| E5 | Multi-Agent Debate Engine | ✅ Complete | 100% |
 | E6 | RAG Pipeline | ⬜ Not Started | 0% |
 | E7 | React UI | ⬜ Not Started | 0% |
 | E8 | Skills & XP | ⬜ Not Started | 0% |
@@ -20,16 +20,42 @@ Active branch: develop
 
 ## Current Sprint
 
-**Sprint 2 — Weeks 2–4**
-Goal: Debate engine, RAG ingestion, React UI
+**Sprint 3 — Weeks 4–6**
+Goal: RAG pipeline, React UI, skills tracking
 
 ### Next Tasks
-- [ ] E5-T1: Agent persona definitions (5 agents with full system prompts)
-- [ ] E5-T2: LangGraph debate orchestrator
-- [ ] E5-T3: Debate engine with autonomous loop + human interrupt
 - [ ] E6-T1: RAG ingestion (LlamaIndex + ChromaDB)
+- [ ] E6-T2: Semantic retrieval per agent turn
+- [ ] E7-T1: React app shell with routing
+- [ ] E7-T2: Onboarding + Dashboard pages
 
 ## Completed Sprints
+
+### Sprint 2 — Weeks 2–4 (DONE)
+Goal: Voice pipeline, debate engine
+
+#### E4 — Voice Pipeline Integration
+- [x] E4-T1: backend/voice/livekit_worker.py — LiveKit agent worker with Groq LLM (llama-3.3-70b-versatile via livekit-plugins-openai), Deepgram STT (nova-2), Silero VAD, Cartesia TTS
+- [x] E4-T2: backend/voice/tts_router.py — VOICE_IDS for all 5 agents, get_tts_for_agent()
+- [x] E4-T3: session.py updated — _dispatch_agent_to_room() creates LiveKit room + dispatches agent worker
+- [x] E4-T4: requirements.txt updated — all LiveKit plugins at 1.5.0, livekit-plugins-openai added, GROQ_API_KEY in config
+
+**Verified:** Worker registers with LiveKit Cloud (Singapore South East region), POST /session/start returns valid JWT token, worker receives job request within 2 seconds, Cartesia TTS WebSocket + Deepgram STT WebSocket both established.
+
+#### E5 — Multi-Agent Debate Engine
+- [x] E5-T1: backend/agents/personas.py — 5 complete agent personas (Alex/SRE, Maya/Architect, Ravi/Cloud, Sam/Java, Jordan/UI) with full system prompts, 7+ disagreement triggers each, 5+ quiz topics each
+- [x] E5-T2: backend/agents/orchestrator.py — LangGraph debate orchestrator with DebateState, route_turn (llama-3.1-8b-instant), generate_turn (llama-3.3-70b-versatile), detect_quiz, wait_for_human, resume_debate nodes
+- [x] E5-T3: backend/agents/debate_engine.py — async debate loop with data callbacks (speaker_change, turn_committed, quiz_event), pause/resume for human interrupt, quiz timeout with agent self-answer
+- [x] E5-T4: backend/agents/synthesizer.py — Groq-powered debrief synthesis (scores, insights, knowledge gaps, overall comment), XP calculation with breakdown (base + participation + quiz + duration + streak + score)
+- [x] E5-T5: backend/voice/livekit_worker.py — updated to run debate engine with voice I/O, passes full metadata (topic, agents, session_id) via room metadata, speaks each agent turn aloud, posts results to /session/{id}/end
+
+**Verified:** 5-turn debate with 3 agents (SRE, Architect, Cloud Eng) on "microservices vs monolith":
+- All agents stay in character with distinct perspectives
+- Each turn ends with a question (Socratic obligation)
+- Quiz detection triggers at 5+ silent human turns
+- 12 data channel messages published (5 speaker_change + 5 turn_committed + 1 quiz_event + 1 quiz answer)
+- Debrief: scores {technical_depth: 4.0, communication: 4.0, debate_resilience: 4.0, ai_native: 3.0}
+- XP: 125 (base 50 + score bonus 75)
 
 ### Sprint 1 — Weeks 1–2 (DONE)
 Goal: App launches, sidecar responds to /health
@@ -55,14 +81,6 @@ Goal: App launches, sidecar responds to /health
 
 **Verified:** Server starts, GET /health returns `{"status":"ok","version":"1.0.0"}`, all 14 routes registered.
 
-#### E4 — Voice Pipeline Integration
-- [x] E4-T1: backend/voice/livekit_worker.py — LiveKit agent worker with Groq LLM (llama-3.3-70b-versatile via livekit-plugins-openai), Deepgram STT (nova-2), Silero VAD, Cartesia TTS
-- [x] E4-T2: backend/voice/tts_router.py — VOICE_IDS for all 5 agents, get_tts_for_agent()
-- [x] E4-T3: session.py updated — _dispatch_agent_to_room() creates LiveKit room + dispatches agent worker
-- [x] E4-T4: requirements.txt updated — all LiveKit plugins at 1.5.0, livekit-plugins-openai added, GROQ_API_KEY in config
-
-**Verified:** Worker registers with LiveKit Cloud (Singapore South East region), POST /session/start returns valid JWT token, worker receives job request within 2 seconds, Cartesia TTS WebSocket + Deepgram STT WebSocket both established.
-
 ## Decisions Log
 
 | Date | Decision | Reason |
@@ -77,6 +95,8 @@ Goal: App launches, sidecar responds to /health
 | 2026-03-24 | LiveKit token generation with graceful fallback | Allows backend to start without LiveKit keys configured |
 | 2026-03-24 | Groq replaces Anthropic for all LLM calls | Faster inference, OpenAI-compatible API via livekit-plugins-openai |
 | 2026-03-24 | LiveKit plugins upgraded from 1.0.14 to 1.5.0 | Required for livekit-agents 1.5.0 API compatibility (Agent+AgentSession pattern) |
+| 2026-03-24 | Two Groq models for debate: 8b routing, 70b generation | Fast routing (llama-3.1-8b-instant) + quality utterances (llama-3.3-70b-versatile) |
+| 2026-03-24 | httpx verify=False for Groq in WSL dev | WSL CA certificate issue; production won't need this |
 
 ## Blockers
 _none_
@@ -89,6 +109,7 @@ _none_
 - LiveKit agents 1.5.0 uses Agent + AgentSession pattern (not VoiceAssistant)
 - Groq model: llama-3.3-70b-versatile (agent utterances), llama-3.1-8b-instant (orchestrator routing)
 - Worker registered at: wss://forge-chamber-osr8q0w6.livekit.cloud
+- Debate engine tested standalone: 5-turn debate completes in ~15 seconds with Groq
 
 ## How to use it with Claude Code
 
