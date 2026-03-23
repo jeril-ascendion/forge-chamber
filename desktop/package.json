@@ -1,0 +1,58 @@
+{
+  "name": "forge-chamber-desktop",
+  "version": "1.0.0",
+  "description": "Forge Chamber — Where engineers get tested",
+  "main": "main.js",
+  "scripts": {
+    "dev": "electron .",
+    "build": "electron-builder --win --x64",
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.4",
+    "electron-keytar": "^8.2.2"
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.ascendion.forge-chamber",
+    "productName": "Forge Chamber",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "splash.html",
+      "assets/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../backend/dist/forge_chamber.exe",
+        "to": "backend/forge_chamber.exe"
+      }
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Forge Chamber"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "ascendion",
+      "repo": "forge-chamber"
+    }
+  }
+}
