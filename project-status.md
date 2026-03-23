@@ -10,7 +10,7 @@ Active branch: develop
 | E1 | Foundation & Repository Setup | ✅ Complete | 100% |
 | E2 | Electron Shell & App Infrastructure | ✅ Complete | 100% |
 | E3 | Python Sidecar & FastAPI Backend | ✅ Complete | 100% |
-| E4 | Voice Pipeline | ⬜ Not Started | 0% |
+| E4 | Voice Pipeline Integration | ✅ Complete | 100% |
 | E5 | Multi-Agent Debate Engine | ⬜ Not Started | 0% |
 | E6 | RAG Pipeline | ⬜ Not Started | 0% |
 | E7 | React UI | ⬜ Not Started | 0% |
@@ -20,14 +20,14 @@ Active branch: develop
 
 ## Current Sprint
 
-**Sprint 2 — Weeks 2–3**
-Goal: Voice pipeline, debate engine, RAG ingestion
+**Sprint 2 — Weeks 2–4**
+Goal: Debate engine, RAG ingestion, React UI
 
 ### Next Tasks
-- [ ] E4-T1: LiveKit worker process
-- [ ] E4-T2: Multi-voice TTS routing
-- [ ] E4-T3: Human interrupt & transcript channel
-- [ ] E5-T1: Agent persona definitions
+- [ ] E5-T1: Agent persona definitions (5 agents with full system prompts)
+- [ ] E5-T2: LangGraph debate orchestrator
+- [ ] E5-T3: Debate engine with autonomous loop + human interrupt
+- [ ] E6-T1: RAG ingestion (LlamaIndex + ChromaDB)
 
 ## Completed Sprints
 
@@ -55,6 +55,14 @@ Goal: App launches, sidecar responds to /health
 
 **Verified:** Server starts, GET /health returns `{"status":"ok","version":"1.0.0"}`, all 14 routes registered.
 
+#### E4 — Voice Pipeline Integration
+- [x] E4-T1: backend/voice/livekit_worker.py — LiveKit agent worker with Groq LLM (llama-3.3-70b-versatile via livekit-plugins-openai), Deepgram STT (nova-2), Silero VAD, Cartesia TTS
+- [x] E4-T2: backend/voice/tts_router.py — VOICE_IDS for all 5 agents, get_tts_for_agent()
+- [x] E4-T3: session.py updated — _dispatch_agent_to_room() creates LiveKit room + dispatches agent worker
+- [x] E4-T4: requirements.txt updated — all LiveKit plugins at 1.5.0, livekit-plugins-openai added, GROQ_API_KEY in config
+
+**Verified:** Worker registers with LiveKit Cloud (Singapore South East region), POST /session/start returns valid JWT token, worker receives job request within 2 seconds, Cartesia TTS WebSocket + Deepgram STT WebSocket both established.
+
 ## Decisions Log
 
 | Date | Decision | Reason |
@@ -67,6 +75,8 @@ Goal: App launches, sidecar responds to /health
 | 2026-03-24 | usePlatform() hook as key abstraction | Components never call Electron/Capacitor directly |
 | 2026-03-24 | RAG routes stubbed in E3, full impl deferred to E6 | Get API shape right early, real ingestion later |
 | 2026-03-24 | LiveKit token generation with graceful fallback | Allows backend to start without LiveKit keys configured |
+| 2026-03-24 | Groq replaces Anthropic for all LLM calls | Faster inference, OpenAI-compatible API via livekit-plugins-openai |
+| 2026-03-24 | LiveKit plugins upgraded from 1.0.14 to 1.5.0 | Required for livekit-agents 1.5.0 API compatibility (Agent+AgentSession pattern) |
 
 ## Blockers
 _none_
@@ -76,7 +86,9 @@ _none_
 - WSL2 Ubuntu for development
 - Claude Code Max for implementation
 - Python 3.11 venv at backend/.venv
-- Updated requirements.txt versions: livekit-agents 1.0.14, llama-index-core 0.10.68
+- LiveKit agents 1.5.0 uses Agent + AgentSession pattern (not VoiceAssistant)
+- Groq model: llama-3.3-70b-versatile (agent utterances), llama-3.1-8b-instant (orchestrator routing)
+- Worker registered at: wss://forge-chamber-osr8q0w6.livekit.cloud
 
 ## How to use it with Claude Code
 
