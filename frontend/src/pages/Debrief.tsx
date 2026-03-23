@@ -1,10 +1,61 @@
-import { useNavigate } from 'react-router-dom'
-import { useAppStore } from '../store/app'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useAppStore, type DebriefData } from '../store/app'
+import { getSession } from '../lib/api'
 import SkillRadar from '../components/SkillRadar'
 
 export default function Debrief() {
   const navigate = useNavigate()
-  const { topic, debrief, xpEarned, resetSession } = useAppStore()
+  const location = useLocation()
+  const { topic: storeTopic, debrief: storeDebrief, xpEarned: storeXp, resetSession } = useAppStore()
+
+  // Allow loading a historical session via router state
+  const routerSessionId = (location.state as { sessionId?: string } | null)?.sessionId
+  const [loading, setLoading] = useState(false)
+  const [historicalDebrief, setHistoricalDebrief] = useState<DebriefData | null>(null)
+  const [historicalXp, setHistoricalXp] = useState(0)
+  const [historicalTopic] = useState('')
+
+  useEffect(() => {
+    if (!routerSessionId) return
+    // If we already have debrief in store (just finished a session), skip fetch
+    if (storeDebrief) return
+
+    setLoading(true)
+    getSession(routerSessionId)
+      .then((session) => {
+        if (session.debrief) {
+          try {
+            const parsed = JSON.parse(session.debrief) as DebriefData
+            setHistoricalDebrief(parsed)
+            setHistoricalXp(session.xp_earned)
+          } catch { /* debrief not valid JSON */ }
+        }
+        // Extract scores from session fields as fallback
+        if (!session.debrief && session.technical_depth_score != null) {
+          setHistoricalDebrief({
+            key_insights: [],
+            strong_moments: [],
+            knowledge_gaps: [],
+            scores: {
+              technical_depth: session.technical_depth_score ?? 0,
+              communication: session.communication_score ?? 0,
+              debate_resilience: session.debate_resilience_score ?? 0,
+              ai_native: session.ai_native_score ?? 0,
+            },
+            overall_comment: 'Historical session.',
+          })
+          setHistoricalXp(session.xp_earned)
+        }
+      })
+      .catch(() => { /* session not found */ })
+      .finally(() => setLoading(false))
+  }, [routerSessionId, storeDebrief])
+
+  // Use store data for current session, historical data for past sessions
+  const debrief = storeDebrief ?? historicalDebrief
+  const xpEarned = storeDebrief ? storeXp : historicalXp
+  const topic = storeDebrief ? storeTopic : historicalTopic
 
   const scores = debrief?.scores ?? { technical_depth: 0, communication: 0, debate_resilience: 0, ai_native: 0 }
   const insights = debrief?.key_insights ?? []
@@ -23,6 +74,25 @@ export default function Debrief() {
     { key: 'debate_resilience', label: 'Debate Resilience' },
     { key: 'ai_native', label: 'AI-Native' },
   ]
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-[var(--text-dim)]">Loading session...</div>
+      </div>
+    )
+  }
+
+  if (!debrief && !loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4">
+        <div className="text-[var(--text-dim)]">No debrief data available.</div>
+        <button onClick={() => navigate('/dashboard')} className="bg-brand text-white px-6 py-2 rounded-lg text-sm">
+          Back to Dashboard
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="h-full overflow-y-auto p-6 md:p-8">

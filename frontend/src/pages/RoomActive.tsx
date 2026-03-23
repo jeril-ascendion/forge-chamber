@@ -20,6 +20,15 @@ export default function RoomActive() {
   const [elapsed, setElapsed] = useState(0)
   const [showEndConfirm, setShowEndConfirm] = useState(false)
   const roomRef = useRef<Room | null>(null)
+
+  // Guard: redirect if no session started
+  useEffect(() => {
+    if (!sessionId) {
+      navigate('/room/setup', { replace: true })
+    }
+  }, [sessionId, navigate])
+
+  if (!sessionId) return null
   const timerRef = useRef<ReturnType<typeof setInterval>>()
 
   // Session timer

@@ -4,6 +4,7 @@ import { usePlatform } from './hooks/usePlatform'
 import { getProfile } from './lib/api'
 import { useAppStore } from './store/app'
 import NavBar from './components/NavBar'
+import UpdateBanner from './components/UpdateBanner'
 import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
 import RoomSetup from './pages/RoomSetup'
@@ -46,6 +47,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen">
+      <UpdateBanner />
       {hasKeys && <NavBar />}
       <main className="flex-1 overflow-hidden">
         <Routes>
