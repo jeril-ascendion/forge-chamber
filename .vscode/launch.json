@@ -1,0 +1,65 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend: FastAPI",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["backend.main:app", "--host", "127.0.0.1", "--port", "8765", "--reload"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Backend: LiveKit Worker",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/voice/livekit_worker.py",
+      "args": ["dev"],
+      "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Frontend: Vite Dev",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}/frontend",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Desktop: Electron",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/desktop/node_modules/.bin/electron",
+      "args": ["${workspaceFolder}/desktop/main.js"],
+      "cwd": "${workspaceFolder}/desktop",
+      "env": {
+        "RENDERER_URL": "http://localhost:5173"
+      },
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack (All 4)",
+      "configurations": [
+        "Backend: FastAPI",
+        "Backend: LiveKit Worker",
+        "Frontend: Vite Dev",
+        "Desktop: Electron"
+      ]
+    },
+    {
+      "name": "Dev (No LiveKit)",
+      "configurations": [
+        "Backend: FastAPI",
+        "Frontend: Vite Dev",
+        "Desktop: Electron"
+      ]
+    }
+  ]
+}
