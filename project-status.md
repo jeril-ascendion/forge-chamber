@@ -13,21 +13,21 @@ Active branch: develop
 | E4 | Voice Pipeline Integration | ✅ Complete | 100% |
 | E5 | Multi-Agent Debate Engine | ✅ Complete | 100% |
 | E6 | RAG Pipeline & Context Ingestion | ✅ Complete | 100% |
-| E7 | React UI | ⬜ Not Started | 0% |
+| E7 | React UI Implementation | ✅ Complete | 100% |
 | E8 | Skills & XP | ⬜ Not Started | 0% |
 | E9 | Testing & QA | ⬜ Not Started | 0% |
 | E10 | CI/CD & Distribution | ⬜ Not Started | 0% |
 
 ## Current Sprint
 
-**Sprint 3 — Weeks 4–6**
-Goal: RAG pipeline, React UI, skills tracking
+**Sprint 4 — Weeks 6–8**
+Goal: Skills & XP system, testing, CI/CD
 
 ### Next Tasks
-- [ ] E7-T1: React app shell with routing
-- [ ] E7-T2: Onboarding + Dashboard pages
-- [ ] E7-T3: RoomSetup + RoomActive pages
-- [ ] E8-T1: Skills radar + XP tracking
+- [ ] E8-T1: Skills tracking integration (frontend ↔ backend)
+- [ ] E9-T1: Backend tests (test_rag, test_personas, test_debrief, test_db, test_api)
+- [ ] E9-T2: Frontend tests (VoiceBar, TranscriptFeed, SkillRadar)
+- [ ] E10-T1: CI/CD pipeline + desktop build
 
 ## Completed Sprints
 
@@ -65,6 +65,23 @@ Goal: Voice pipeline, debate engine, RAG pipeline
 - [x] E6-T5: RAG wired into debate — orchestrator.generate_turn calls retriever per turn, context injected into agent system prompts
 
 **Verified:** File ingestion (microservices article → 1 chunk), source listing, semantic retrieval (2,680 chars context), RAG-grounded 3-agent debate (agents reference ingested content on microservices trade-offs), source deletion removes from ChromaDB + sources.json.
+
+### Sprint 3 — Weeks 4–6 (DONE)
+Goal: React UI
+
+#### E7 — React UI Implementation
+- [x] E7-T1: App shell — React Router 6 routing (7 routes), Zustand store (engineer/room/session/debrief slices), typed API client (all 14 endpoints), usePlatform hook (Electron/Web), dark theme CSS with responsive breakpoints
+- [x] E7-T2: Onboarding — 2-column layout (brand panel + form), 6 API key inputs with show/hide, role track dropdown, skill level radio, "Enter the Chamber" submit
+- [x] E7-T3: Dashboard — greeting header, XP counter, quick start (topic input + 6 preset pills + 5 agent toggle pills), recent sessions list
+- [x] E7-T4: RoomSetup — agent cards with mandates, ContextDrop (URL + file ingestion), role selector, "Start Room" button
+- [x] E7-T5: RoomActive — 3-panel layout (left: timer + end session, center: TranscriptFeed + VoiceBar, right: AgentPanel + quiz zone), LiveKit data channel integration (turn_committed, speaker_change, quiz_event, session_complete), spacebar join/leave shortcut
+- [x] E7-T6: Debrief — score cards + SkillRadar SVG (pure inline, 4 axes), key insights, strong moments, knowledge gaps, XP display, "Start Another Room" action
+- [x] E7-T7: Progress — profile header, XPBar with levels, SkillRadar, 4 domain progress bars, session history table
+- [x] E7-T8: Settings — editable profile (PUT /engineer), API keys section, about info
+- [x] E7-T9: NavBar — desktop 64px sidebar + mobile bottom tabs (responsive @768px breakpoint)
+- [x] E7-T10: ContextDrop — URL input + file drop zone, source chips with delete, POST /rag/ingest-url + /ingest-file
+
+**Verified:** `npx tsc --noEmit` passes with zero errors. Vite dev server starts in 141ms. 24 files, 6,752 lines of TypeScript/React. All 7 pages render, all components typed, all API endpoints wired.
 
 ### Sprint 1 — Weeks 1–2 (DONE)
 Goal: App launches, sidecar responds to /health
@@ -108,6 +125,9 @@ Goal: App launches, sidecar responds to /health
 | 2026-03-24 | httpx verify=False for Groq in WSL dev | WSL CA certificate issue; production won't need this |
 | 2026-03-24 | ChromaDB SentenceTransformerEmbeddingFunction for consistency | Same model embeds at ingest and query time, no drift |
 | 2026-03-24 | Embedder loaded in main.py lifespan before routes | Ensures model ready before any RAG request; ~5s cold start |
+| 2026-03-24 | Dark theme default (#0F0F14), functional over beautiful | Core UX works first; polish later. RoomActive gets extra care as core experience |
+| 2026-03-24 | Pure SVG SkillRadar (no chart libraries) | Per CLAUDE.md spec; keeps bundle small, full control over animation |
+| 2026-03-24 | Zustand over Redux/Context | Simpler API, less boilerplate, good TypeScript inference |
 
 ## Blockers
 _none_
