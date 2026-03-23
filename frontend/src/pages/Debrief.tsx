@@ -7,7 +7,7 @@ import SkillRadar from '../components/SkillRadar'
 export default function Debrief() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { topic: storeTopic, debrief: storeDebrief, xpEarned: storeXp, resetSession } = useAppStore()
+  const { topic: storeTopic, debrief: storeDebrief, xpEarned: storeXp, xpBreakdown, newBadges, resetSession } = useAppStore()
 
   // Allow loading a historical session via router state
   const routerSessionId = (location.state as { sessionId?: string } | null)?.sessionId
@@ -104,6 +104,24 @@ export default function Debrief() {
           <div className="mt-3 inline-block bg-brand/20 text-brand font-bold text-xl px-4 py-2 rounded-lg">
             +{xpEarned} XP
           </div>
+          {xpBreakdown && (
+            <div className="mt-2 text-xs text-[var(--text-dim)]">
+              {xpBreakdown.base} base
+              {xpBreakdown.participation > 0 && ` + ${xpBreakdown.participation} participation`}
+              {xpBreakdown.quiz > 0 && ` + ${xpBreakdown.quiz} quiz`}
+              {xpBreakdown.duration_bonus > 0 && ` + ${xpBreakdown.duration_bonus} duration`}
+              {xpBreakdown.streak > 0 && ` + ${xpBreakdown.streak} streak`}
+            </div>
+          )}
+          {newBadges.length > 0 && (
+            <div className="mt-3 flex gap-2">
+              {newBadges.map((b) => (
+                <span key={b} className="bg-accent/20 text-accent px-3 py-1 rounded-full text-xs font-semibold">
+                  New badge: {b.replace(/_/g, ' ')}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Score cards + radar */}

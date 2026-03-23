@@ -84,7 +84,7 @@ export interface TurnPayload {
 }
 
 export const endSession = (id: string, transcript: TurnPayload[]) =>
-  apiFetch<{ debrief: Record<string, unknown>; scores: Record<string, number>; xp_earned: number }>(
+  apiFetch<{ debrief: Record<string, unknown>; scores: Record<string, number>; xp_earned: number; xp_breakdown: Record<string, number> | null; new_badges: string[] }>(
     `/session/${id}/end`,
     { method: 'POST', body: JSON.stringify({ transcript }) },
   )
@@ -116,11 +116,30 @@ export interface SkillScores {
 }
 
 export interface SessionProgress {
+  session_id: string
   date: string
   topic: string | null
+  duration_seconds: number | null
   xp: number
   scores: Record<string, number | null>
 }
 
+export interface BadgeInfo {
+  key: string
+  label: string
+  description: string
+  icon: string
+  earned_at: string
+}
+
+export interface ProgressSummary {
+  skills: SkillScores
+  total_xp: number
+  total_sessions: number
+  current_streak: number
+  badges: BadgeInfo[]
+}
+
 export const getSkills = () => apiFetch<SkillScores>('/progress/skills')
 export const getProgressSessions = () => apiFetch<SessionProgress[]>('/progress/sessions')
+export const getProgressSummary = () => apiFetch<ProgressSummary>('/progress/summary')

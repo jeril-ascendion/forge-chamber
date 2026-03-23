@@ -47,11 +47,13 @@ interface AppState {
   quizEvent: { question: string; agent_key: string; timeout_seconds: number } | null
   debrief: DebriefData | null
   xpEarned: number
+  xpBreakdown: Record<string, number> | null
+  newBadges: string[]
   addTurn: (turn: TranscriptTurn) => void
   setActiveSpeaker: (key: string | null) => void
   setIsDebating: (v: boolean) => void
   setQuizEvent: (e: { question: string; agent_key: string; timeout_seconds: number } | null) => void
-  setDebrief: (d: DebriefData, xp: number) => void
+  setDebrief: (d: DebriefData, xp: number, breakdown?: Record<string, number> | null, badges?: string[]) => void
   resetSession: () => void
 }
 
@@ -91,11 +93,13 @@ export const useAppStore = create<AppState>((set) => ({
   quizEvent: null,
   debrief: null,
   xpEarned: 0,
+  xpBreakdown: null,
+  newBadges: [],
   addTurn: (turn) => set((s) => ({ transcript: [...s.transcript, turn] })),
   setActiveSpeaker: (key) => set({ activeSpeaker: key }),
   setIsDebating: (v) => set({ isDebating: v }),
   setQuizEvent: (e) => set({ quizEvent: e }),
-  setDebrief: (d, xp) => set({ debrief: d, xpEarned: xp }),
+  setDebrief: (d, xp, breakdown, badges) => set({ debrief: d, xpEarned: xp, xpBreakdown: breakdown ?? null, newBadges: badges ?? [] }),
   resetSession: () =>
     set({
       transcript: [],
@@ -104,6 +108,8 @@ export const useAppStore = create<AppState>((set) => ({
       quizEvent: null,
       debrief: null,
       xpEarned: 0,
+      xpBreakdown: null,
+      newBadges: [],
       sessionId: '',
       livekitToken: '',
       livekitUrl: '',

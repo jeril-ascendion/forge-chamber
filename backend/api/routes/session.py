@@ -1,3 +1,4 @@
+import datetime
 import json
 import logging
 import os
@@ -189,6 +190,13 @@ async def end_session_route(
     body: SessionEndRequest,
     db: AsyncSession = Depends(get_db),
 ) -> SessionEndResponse:
+    from backend.mentoring.badges import check_and_award_badges
+    from backend.mentoring.skills_engine import (
+        calculate_xp,
+        get_current_streak,
+        update_skill_scores as engine_update_skills,
+    )
+
     session = await get_session(db, session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found.")
@@ -206,22 +214,47 @@ async def end_session_route(
             is_quiz_event=turn.is_quiz_event,
         )
 
-    # Placeholder scores — real debrief synthesis comes in E5
-    scores = {
-        "technical_depth": 3.0,
-        "communication": 3.0,
-        "debate_resilience": 3.0,
-        "ai_native": 3.0,
-    }
-    xp_earned = int(sum(scores.values()) * 25)
+    transcript_dicts = [t.model_dump() for t in body.transcript]
+    transcript_json = json.dumps(transcript_dicts)
 
-    transcript_json = json.dumps([t.model_dump() for t in body.transcript])
-    debrief_json = json.dumps({
-        "key_insights": ["Session recorded successfully."],
-        "scores": scores,
-        "overall_comment": "Debrief synthesis not yet implemented.",
-    })
+    # Generate debrief scores (use synthesizer if available, else placeholder)
+    try:
+        from backend.agents.synthesizer import synthesize_session
+        import asyncio
 
+        debrief_data = await synthesize_session(transcript_dicts)
+        scores = debrief_data.get("scores", {})
+        for domain in ["technical_depth", "communication", "debate_resilience", "ai_native"]:
+            scores.setdefault(domain, 3.0)
+    except Exception as exc:
+        logger.warning("Debrief synthesis failed: %s — using placeholder scores", exc)
+        scores = {
+            "technical_depth": 3.0,
+            "communication": 3.0,
+            "debate_resilience": 3.0,
+            "ai_native": 3.0,
+        }
+        debrief_data = {
+            "key_insights": ["Session recorded."],
+            "scores": scores,
+            "overall_comment": "Debrief generation unavailable.",
+        }
+
+    debrief_json = json.dumps(debrief_data)
+
+    # Update skills with weighted average
+    await engine_update_skills(session.engineer_id, scores, db)
+
+    # Calculate XP
+    duration = 0
+    if session.started_at:
+        import datetime as dt
+        duration = int((dt.datetime.utcnow() - session.started_at).total_seconds())
+    streak = await get_current_streak(session.engineer_id, db)
+    xp_result = calculate_xp(transcript_dicts, duration_seconds=duration, streak=streak)
+    xp_earned = xp_result["total"]
+
+    # Save session results
     await end_session(
         db,
         session_id=session_id,
@@ -231,11 +264,24 @@ async def end_session_route(
         xp_earned=xp_earned,
     )
 
-    await update_skill_scores(db, session.engineer_id, scores)
-    await update_xp(db, session.engineer_id, xp_earned)
+    # Update engineer stats
+    engineer = await get_engineer(db)
+    if engineer:
+        engineer.total_xp += xp_earned
+        engineer.total_sessions += 1
+        engineer.last_session_date = str(datetime.date.today())
+        await db.commit()
+
+    # Check badges
+    session_meta = {"has_context": False}  # TODO: check if RAG was used
+    new_badges = await check_and_award_badges(
+        session.engineer_id, session_meta, transcript_dicts, streak, db,
+    )
 
     return SessionEndResponse(
-        debrief=json.loads(debrief_json),
+        debrief=debrief_data,
         scores=scores,
         xp_earned=xp_earned,
+        xp_breakdown=xp_result["breakdown"],
+        new_badges=new_badges,
     )

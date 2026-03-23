@@ -75,6 +75,8 @@ class SessionEndResponse(BaseModel):
     debrief: dict | None = None
     scores: dict[str, float]
     xp_earned: int
+    xp_breakdown: dict | None = None
+    new_badges: list[str] = []
 
 
 class SessionDetailResponse(BaseModel):
@@ -140,7 +142,25 @@ class SkillScoresResponse(BaseModel):
 
 
 class SessionProgressItem(BaseModel):
+    session_id: str = ""
     date: str
     topic: str | None
+    duration_seconds: int | None = None
     xp: int
     scores: dict[str, float | None]
+
+
+class BadgeResponse(BaseModel):
+    key: str
+    label: str
+    description: str
+    icon: str
+    earned_at: str
+
+
+class ProgressSummaryResponse(BaseModel):
+    skills: SkillScoresResponse
+    total_xp: int
+    total_sessions: int
+    current_streak: int
+    badges: list[BadgeResponse]

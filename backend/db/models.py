@@ -20,6 +20,20 @@ class Engineer(Base):
     )
     total_xp: Mapped[int] = mapped_column(Integer, default=0)
     total_sessions: Mapped[int] = mapped_column(Integer, default=0)
+    last_session_date: Mapped[str | None] = mapped_column(String, nullable=True)
+
+
+class Badge(Base):
+    __tablename__ = "badges"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True)
+    engineer_id: Mapped[str] = mapped_column(
+        String, ForeignKey("engineers.id"), nullable=False
+    )
+    badge_key: Mapped[str] = mapped_column(String, nullable=False)
+    earned_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime, default=datetime.datetime.utcnow
+    )
 
 
 class SkillScore(Base):
