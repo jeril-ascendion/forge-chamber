@@ -12,7 +12,7 @@ Active branch: develop
 | E3 | Python Sidecar & FastAPI Backend | ✅ Complete | 100% |
 | E4 | Voice Pipeline Integration | ✅ Complete | 100% |
 | E5 | Multi-Agent Debate Engine | ✅ Complete | 100% |
-| E6 | RAG Pipeline | ⬜ Not Started | 0% |
+| E6 | RAG Pipeline & Context Ingestion | ✅ Complete | 100% |
 | E7 | React UI | ⬜ Not Started | 0% |
 | E8 | Skills & XP | ⬜ Not Started | 0% |
 | E9 | Testing & QA | ⬜ Not Started | 0% |
@@ -24,15 +24,15 @@ Active branch: develop
 Goal: RAG pipeline, React UI, skills tracking
 
 ### Next Tasks
-- [ ] E6-T1: RAG ingestion (LlamaIndex + ChromaDB)
-- [ ] E6-T2: Semantic retrieval per agent turn
 - [ ] E7-T1: React app shell with routing
 - [ ] E7-T2: Onboarding + Dashboard pages
+- [ ] E7-T3: RoomSetup + RoomActive pages
+- [ ] E8-T1: Skills radar + XP tracking
 
 ## Completed Sprints
 
 ### Sprint 2 — Weeks 2–4 (DONE)
-Goal: Voice pipeline, debate engine
+Goal: Voice pipeline, debate engine, RAG pipeline
 
 #### E4 — Voice Pipeline Integration
 - [x] E4-T1: backend/voice/livekit_worker.py — LiveKit agent worker with Groq LLM (llama-3.3-70b-versatile via livekit-plugins-openai), Deepgram STT (nova-2), Silero VAD, Cartesia TTS
@@ -56,6 +56,15 @@ Goal: Voice pipeline, debate engine
 - 12 data channel messages published (5 speaker_change + 5 turn_committed + 1 quiz_event + 1 quiz answer)
 - Debrief: scores {technical_depth: 4.0, communication: 4.0, debate_resilience: 4.0, ai_native: 3.0}
 - XP: 125 (base 50 + score bonus 75)
+
+#### E6 — RAG Pipeline & Context Ingestion
+- [x] E6-T1: backend/rag/embedder.py — all-MiniLM-L6-v2 singleton loaded at startup, ChromaDB PersistentClient with SentenceTransformerEmbeddingFunction, initialized in main.py lifespan
+- [x] E6-T2: backend/rag/ingester.py — URL + file ingestion (PDF, DOCX, TXT, MD) with LlamaIndex SentenceSplitter (500 tokens, 50 overlap), sha256 chunk IDs, source tracking in sources.json
+- [x] E6-T3: backend/rag/retriever.py — semantic search returning formatted context blocks (retrieve_context + retrieve_for_agent_turn)
+- [x] E6-T4: backend/api/routes/rag.py — stubs replaced with real implementations calling ingester.py
+- [x] E6-T5: RAG wired into debate — orchestrator.generate_turn calls retriever per turn, context injected into agent system prompts
+
+**Verified:** File ingestion (microservices article → 1 chunk), source listing, semantic retrieval (2,680 chars context), RAG-grounded 3-agent debate (agents reference ingested content on microservices trade-offs), source deletion removes from ChromaDB + sources.json.
 
 ### Sprint 1 — Weeks 1–2 (DONE)
 Goal: App launches, sidecar responds to /health
@@ -97,6 +106,8 @@ Goal: App launches, sidecar responds to /health
 | 2026-03-24 | LiveKit plugins upgraded from 1.0.14 to 1.5.0 | Required for livekit-agents 1.5.0 API compatibility (Agent+AgentSession pattern) |
 | 2026-03-24 | Two Groq models for debate: 8b routing, 70b generation | Fast routing (llama-3.1-8b-instant) + quality utterances (llama-3.3-70b-versatile) |
 | 2026-03-24 | httpx verify=False for Groq in WSL dev | WSL CA certificate issue; production won't need this |
+| 2026-03-24 | ChromaDB SentenceTransformerEmbeddingFunction for consistency | Same model embeds at ingest and query time, no drift |
+| 2026-03-24 | Embedder loaded in main.py lifespan before routes | Ensures model ready before any RAG request; ~5s cold start |
 
 ## Blockers
 _none_
