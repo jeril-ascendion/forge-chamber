@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     livekit_api_secret: str = ""
 
     # LLM / STT / TTS keys
+    groq_api_key: str = ""
     anthropic_api_key: str = ""
     deepgram_api_key: str = ""
     cartesia_api_key: str = ""

@@ -57,6 +57,40 @@ def _generate_livekit_token(engineer_name: str, room_name: str) -> str:
         return "livekit-token-placeholder"
 
 
+async def _dispatch_agent_to_room(room_name: str, agent_key: str) -> None:
+    """Create a LiveKit room and dispatch the agent worker to it."""
+    try:
+        from livekit import api as lk_api
+
+        lk_url = os.environ.get("LIVEKIT_URL", settings.livekit_url)
+        lk_key = os.environ.get("LIVEKIT_API_KEY", settings.livekit_api_key)
+        lk_secret = os.environ.get("LIVEKIT_API_SECRET", settings.livekit_api_secret)
+
+        lk_client = lk_api.LiveKitAPI(lk_url, lk_key, lk_secret)
+
+        # Create the room (idempotent — returns existing if already exists)
+        await lk_client.room.create_room(
+            lk_api.CreateRoomRequest(
+                name=room_name,
+                metadata=agent_key,
+            )
+        )
+
+        # Dispatch agent worker to the room
+        await lk_client.agent_dispatch.create_dispatch(
+            lk_api.CreateAgentDispatchRequest(
+                room=room_name,
+                agent_name="forge-chamber-agent",
+                metadata=agent_key,
+            )
+        )
+
+        await lk_client.aclose()
+        logger.info("Agent dispatched to room %s (agent_key=%s)", room_name, agent_key)
+    except Exception as exc:
+        logger.warning("Agent dispatch failed: %s — worker will pick up via room events", exc)
+
+
 @router.post("/start", response_model=SessionStartResponse)
 async def start_session(
     body: SessionStartRequest,
@@ -80,6 +114,10 @@ async def start_session(
 
     livekit_url = os.environ.get("LIVEKIT_URL", settings.livekit_url)
     livekit_token = _generate_livekit_token(engineer.name, room_name)
+
+    # Dispatch agent worker to the LiveKit room
+    agent_key = body.agents[0] if body.agents else "sre"
+    await _dispatch_agent_to_room(room_name, agent_key)
 
     return SessionStartResponse(
         livekit_url=livekit_url,

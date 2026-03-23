@@ -1,11 +1,11 @@
 fastapi==0.111.0
 uvicorn[standard]==0.30.1
 python-multipart==0.0.9
-livekit-agents==1.0.14
-livekit-plugins-anthropic==1.0.14
-livekit-plugins-deepgram==1.0.14
-livekit-plugins-silero==1.0.14
-livekit-plugins-cartesia==1.0.14
+livekit-agents==1.5.0
+livekit-plugins-openai==1.5.0
+livekit-plugins-deepgram==1.5.0
+livekit-plugins-silero==1.5.0
+livekit-plugins-cartesia==1.5.0
 langchain==0.2.12
 langgraph==0.1.19
 anthropic==0.34.2
