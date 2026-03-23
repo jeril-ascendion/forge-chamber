@@ -14,22 +14,35 @@ Active branch: develop
 | E5 | Multi-Agent Debate Engine | ✅ Complete | 100% |
 | E6 | RAG Pipeline & Context Ingestion | ✅ Complete | 100% |
 | E7 | React UI Implementation | ✅ Complete | 100% |
-| E8 | Skills & XP | ⬜ Not Started | 0% |
+| E8 | Skills, XP & Progress Tracking | ✅ Complete | 100% |
 | E9 | Testing & QA | ⬜ Not Started | 0% |
 | E10 | CI/CD & Distribution | ⬜ Not Started | 0% |
 
 ## Current Sprint
 
-**Sprint 4 — Weeks 6–8**
-Goal: Skills & XP system, testing, CI/CD
+**Sprint 5 — Weeks 8–10**
+Goal: Testing, QA, CI/CD, distribution
 
 ### Next Tasks
-- [ ] E8-T1: Skills tracking integration (frontend ↔ backend)
 - [ ] E9-T1: Backend tests (test_rag, test_personas, test_debrief, test_db, test_api)
 - [ ] E9-T2: Frontend tests (VoiceBar, TranscriptFeed, SkillRadar)
 - [ ] E10-T1: CI/CD pipeline + desktop build
+- [ ] E10-T2: Auto-update via GitHub Releases
 
 ## Completed Sprints
+
+### Sprint 4 — Weeks 6–8 (DONE)
+Goal: Skills & XP system
+
+#### E8 — Skills, XP & Progress Tracking
+- [x] E8-T1: backend/mentoring/skills_engine.py — weighted avg skill updates (0.70 existing + 0.30 new, 0.5 max drop floor), XP calc with breakdown (base + participation + quiz + duration + streak), streak tracking by date
+- [x] E8-T2: backend/mentoring/badges.py — 8 badges (first_debate, sre_survivor, architect_approved, streak_3, streak_7, ten_sessions, context_master, quiz_ace), Badge ORM model in db/models.py
+- [x] E8-T3: POST /session/{id}/end — wired to skills_engine + badges, returns xp_breakdown + new_badges
+- [x] E8-T4: GET /progress/summary — skills + total_xp + streak + badges. GET /progress/sessions — joined with rooms for topic, includes duration
+- [x] E8-T5: Frontend Debrief — XP breakdown display, new badge chips. Progress — streak counter, badge chips, session history with duration
+- [x] E8-T6: Updated Zustand store (xpBreakdown, newBadges), API client (ProgressSummary, BadgeInfo types)
+
+**Verified:** Session end returns 80 XP (50 base + 20 participation + 10 streak), 3 badges awarded (first_debate, sre_survivor, architect_approved). /progress/summary returns skills, XP, streak, badges. tsc: 0 errors.
 
 ### Sprint 2 — Weeks 2–4 (DONE)
 Goal: Voice pipeline, debate engine, RAG pipeline
