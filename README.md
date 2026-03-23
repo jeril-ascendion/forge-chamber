@@ -14,6 +14,7 @@
 5. [API Keys and Credentials](#5-api-keys-and-credentials)
 6. [Running in Development](#6-running-in-development)
 7. [Building for Distribution](#7-building-for-distribution)
+10. [Architecture Diagrams](#10-architecture-diagrams)
 8. [Project Structure Deep Dive](#8-project-structure-deep-dive)
 9. [Troubleshooting](#9-troubleshooting)
 
@@ -720,3 +721,17 @@ cd renderer && npx tsc --noEmit
 | Linux | `~/.config/ForgeChamber/` |
 
 Contents: `forge_chamber.db` (SQLite), `chroma/` (vector store), `sources.json`, `tmp/` (file uploads)
+
+---
+
+## 10. Architecture Diagrams
+
+16 Mermaid diagrams are in [`docs/diagrams/`](docs/diagrams/README.md), organized by audience:
+
+| Category | Count | Audience | Examples |
+|----------|-------|----------|----------|
+| **Functional** | 5 | Product, stakeholders | User journey, room creation, debate session |
+| **Technical** | 6 | Engineers, architects | System overview, voice pipeline, database ERD |
+| **Sequence** | 5 | Engineers implementing | Agent turns, human interrupt, RAG ingestion |
+
+Diagrams render automatically on GitHub. For local preview, use the VS Code "Mermaid Preview" extension or paste into [mermaid.live](https://mermaid.live).

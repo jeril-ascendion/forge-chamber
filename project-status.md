@@ -129,6 +129,15 @@ Goal: App launches, sidecar responds to /health
 | 2026-03-24 | Pure SVG SkillRadar (no chart libraries) | Per CLAUDE.md spec; keeps bundle small, full control over animation |
 | 2026-03-24 | Zustand over Redux/Context | Simpler API, less boilerplate, good TypeScript inference |
 
+## Documentation
+
+- `docs/diagrams/` — 16 Mermaid architecture diagrams in 3 categories:
+  - `functional/` (5): user journey, room creation, debate session, context ingestion, debrief & skills
+  - `technical/` (6): system overview, multi-platform, voice pipeline, debate engine, RAG pipeline, database ERD
+  - `sequence/` (5): voice session lifecycle, agent turns, human interrupt, RAG ingestion, CI/CD pipeline
+- All diagrams render on GitHub, VS Code (Mermaid Preview), or [mermaid.live](https://mermaid.live)
+- See `docs/diagrams/README.md` for full index
+
 ## Blockers
 _none_
 
