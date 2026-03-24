@@ -15,21 +15,36 @@ Active branch: develop
 | E6 | RAG Pipeline & Context Ingestion | ✅ Complete | 100% |
 | E7 | React UI Implementation | ✅ Complete | 100% |
 | E8 | Skills, XP & Progress Tracking | ✅ Complete | 100% |
-| E9 | Testing & QA | ⬜ Not Started | 0% |
+| E9 | Testing & Quality Assurance | ✅ Complete | 100% |
 | E10 | CI/CD & Distribution | ⬜ Not Started | 0% |
 
 ## Current Sprint
 
-**Sprint 5 — Weeks 8–10**
-Goal: Testing, QA, CI/CD, distribution
+**Sprint 6 — Weeks 10–12**
+Goal: CI/CD pipeline, desktop build, distribution
 
 ### Next Tasks
-- [ ] E9-T1: Backend tests (test_rag, test_personas, test_debrief, test_db, test_api)
-- [ ] E9-T2: Frontend tests (VoiceBar, TranscriptFeed, SkillRadar)
-- [ ] E10-T1: CI/CD pipeline + desktop build
-- [ ] E10-T2: Auto-update via GitHub Releases
+- [ ] E10-T1: GitHub Actions CI pipeline (lint, test, build)
+- [ ] E10-T2: PyInstaller desktop build
+- [ ] E10-T3: electron-builder Windows installer
+- [ ] E10-T4: Auto-update via GitHub Releases
 
 ## Completed Sprints
+
+### Sprint 5 — Weeks 8–10 (DONE)
+Goal: Testing & QA
+
+#### E9 — Testing & Quality Assurance
+- [x] E9-T1: backend/tests/conftest.py — in-memory SQLite, EphemeralClient ChromaDB, mock Groq, sample fixtures, FastAPI TestClient
+- [x] E9-T2: backend/tests/test_db.py (9 tests) — schema, engineer CRUD, session CRUD, foreign keys, skill scores (weighted avg, floor)
+- [x] E9-T3: backend/tests/test_rag.py (6 tests) — embeddings, file ingestion (txt, md), retrieval, source list/delete
+- [x] E9-T4: backend/tests/test_agents.py (14 tests) — persona defs, prompt validation, orchestrator fallback + no-repeat, synthesizer structure + failure, XP calc, badges
+- [x] E9-T5: backend/tests/test_api.py (13 tests) — health, engineer, session, RAG, progress endpoints
+- [x] E9-T6: Frontend test setup — Vitest + jsdom, mock electronAPI + livekit-client + fetch
+- [x] E9-T7: Frontend component tests (18 tests) — SkillRadar SVG, VoiceBar modes, TranscriptFeed turns, ContextDrop inputs
+- [x] E9-T8: pytest.ini, .coveragerc (60% threshold), test exclusion from tsc
+
+**Verified:** 43 backend tests passed (19.4s), 18 frontend tests passed (1.5s). Backend coverage 64% (livekit_worker excluded). tsc: 0 errors. No skipped tests.
 
 ### Sprint 4 — Weeks 6–8 (DONE)
 Goal: Skills & XP system
