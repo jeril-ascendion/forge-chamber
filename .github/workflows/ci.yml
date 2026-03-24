@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Run tests with coverage
+        run: |
+          cd backend
+          python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing
+        env:
+          FORGE_DATA_DIR: /tmp/forge-test
+          FORGE_PORT: "8765"
+          GROQ_API_KEY: test-key-not-real
+          LIVEKIT_URL: wss://test.livekit.cloud
+          LIVEKIT_API_KEY: test-key
+          LIVEKIT_API_SECRET: test-secret
+          DEEPGRAM_API_KEY: test-key
+          CARTESIA_API_KEY: test-key
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-coverage
+          path: backend/coverage.xml
+
+  react-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: cd frontend && npm ci
+
+      - name: Run tests
+        run: cd frontend && npx vitest run
+
+      - name: TypeScript check
+        run: cd frontend && npx tsc --noEmit

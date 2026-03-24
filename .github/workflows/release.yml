@@ -1,0 +1,74 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+
+      - name: Install Visual C++ Redistributable
+        run: choco install vcredist140 -y
+        shell: pwsh
+
+      - name: Install Python dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pyinstaller
+        shell: pwsh
+
+      - name: Build Python sidecar with PyInstaller
+        run: |
+          cd backend
+          pyinstaller forge_chamber.spec --clean
+          echo "Sidecar size:"
+          "{0:N2} MB" -f ((Get-Item dist/forge_chamber.exe).Length / 1MB)
+        shell: pwsh
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build React frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+        shell: pwsh
+
+      - name: Install Electron dependencies
+        run: cd desktop && npm ci
+        shell: pwsh
+
+      - name: Build Electron installer
+        run: cd desktop && npx electron-builder --win --x64 --publish never
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          files: desktop/dist/*.exe
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, '-beta') || contains(github.ref, '-rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

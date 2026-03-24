@@ -1,0 +1,28 @@
+name: Update Download Page
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  update-portal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Update version file
+        run: |
+          mkdir -p docs
+          echo "${{ steps.version.outputs.VERSION }}" > docs/current-version.txt
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add docs/current-version.txt
+          git commit -m "chore: update download version to ${{ steps.version.outputs.VERSION }}" || true
+          git push || true

@@ -47,11 +47,13 @@
       "perMachine": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Forge Chamber"
+      "shortcutName": "Forge Chamber",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
     },
     "publish": {
       "provider": "github",
-      "owner": "ascendion",
+      "owner": "jeril-ascendion",
       "repo": "forge-chamber"
     }
   }
