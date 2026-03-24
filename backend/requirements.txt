@@ -14,7 +14,7 @@ llama-index-readers-web==0.1.6
 llama-index-readers-file==0.1.33
 llama-index-embeddings-huggingface==0.2.3
 chromadb==0.5.11
-sentence-transformers==3.0.1
+fastembed==0.3.1
 sqlalchemy==2.0.32
 aiosqlite==0.20.0
 pydantic-settings==2.4.0
