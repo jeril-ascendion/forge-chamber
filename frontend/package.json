@@ -11,26 +11,30 @@
     "lint": "eslint . --ext ts,tsx"
   },
   "dependencies": {
+    "@capacitor/core": "^6.1.2",
+    "@livekit/components-react": "^2.5.4",
+    "livekit-client": "^2.5.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.1",
-    "zustand": "^4.5.5",
-    "@livekit/components-react": "^2.5.4",
-    "livekit-client": "^2.5.7",
-    "@capacitor/core": "^6.1.2"
+    "zustand": "^4.5.5"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.4.0",
+    "@typescript-eslint/parser": "^8.4.0",
     "@vitejs/plugin-react": "^4.3.1",
-    "typescript": "^5.5.4",
-    "vite": "^5.4.3",
-    "vitest": "^2.0.5",
-    "tailwindcss": "^3.4.10",
-    "postcss": "^8.4.44",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.9.1",
-    "@typescript-eslint/eslint-plugin": "^8.4.0",
-    "@typescript-eslint/parser": "^8.4.0"
+    "jsdom": "^29.0.1",
+    "postcss": "^8.4.44",
+    "tailwindcss": "^3.4.10",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.3",
+    "vitest": "^2.0.5"
   }
 }

@@ -1,0 +1,11 @@
+[run]
+source = .
+omit =
+    tests/*
+    .venv/*
+    forge_chamber.spec
+    voice/livekit_worker.py
+
+[report]
+fail_under = 60
+show_missing = true
