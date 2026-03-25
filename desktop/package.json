@@ -30,8 +30,9 @@
     ],
     "extraResources": [
       {
-        "from": "../backend/dist/forge_chamber.exe",
-        "to": "backend/forge_chamber.exe"
+        "from": "../backend/dist/forge_chamber/",
+        "to": "backend/",
+        "filter": ["**/*"]
       }
     ],
     "win": {

@@ -1,17 +1,18 @@
 # -*- mode: python ; coding: utf-8 -*-
 # Forge Chamber — PyInstaller build spec
-# Produces a single-file exe with all dependencies bundled.
+# Produces a directory build (faster than onefile on CI).
+# electron-builder bundles the entire dist/forge_chamber/ folder.
 # Usage: cd backend && pyinstaller forge_chamber.spec --clean
 
-from PyInstaller.utils.hooks import collect_all, collect_data_files
+from PyInstaller.utils.hooks import collect_all
 
 datas, binaries, hiddenimports = [], [], []
 
+# Only collect packages that need special handling.
+# Skip heavy ML packages — they work fine with just hiddenimports.
 for pkg in [
-    'fastapi', 'uvicorn', 'livekit', 'livekit_agents',
-    'langchain', 'langgraph', 'chromadb', 'sentence_transformers',
-    'llama_index', 'sqlalchemy', 'anthropic', 'pydantic',
-    'pydantic_settings', 'openai',
+    'fastapi', 'uvicorn', 'pydantic', 'pydantic_settings',
+    'sqlalchemy', 'chromadb', 'openai',
 ]:
     try:
         d, b, h = collect_all(pkg)
@@ -46,6 +47,14 @@ a = Analysis(
         'uvicorn.protocols.http.auto',
         'uvicorn.lifespan',
         'uvicorn.lifespan.on',
+        'fastembed',
+        'onnxruntime',
+        'langchain',
+        'langgraph',
+        'llama_index',
+        'anthropic',
+        'livekit',
+        'livekit.agents',
         'backend.api.routes.health',
         'backend.api.routes.engineer',
         'backend.api.routes.session',
@@ -58,18 +67,24 @@ a = Analysis(
 
 pyz = PYZ(a.pure)
 
+# Directory build (not onefile) — much faster on CI
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     name='forge_chamber',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
-    upx_exclude=[],
+    upx=False,
     console=False,
-    onefile=True,
     icon='../desktop/assets/icon.ico',
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=False,
+    name='forge_chamber',
 )

@@ -13,7 +13,7 @@ echo "Step 1/4: Building Python sidecar..."
 cd backend
 source .venv/bin/activate
 pyinstaller forge_chamber.spec --clean
-SIDECAR_SIZE=$(du -sh dist/forge_chamber.exe 2>/dev/null | cut -f1 || echo "N/A")
+SIDECAR_SIZE=$(du -sh dist/forge_chamber/ 2>/dev/null | cut -f1 || echo "N/A")
 echo "Sidecar: $SIDECAR_SIZE"
 deactivate
 cd ..
