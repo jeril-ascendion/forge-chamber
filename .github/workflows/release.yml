@@ -67,11 +67,13 @@ jobs:
         run: cd desktop && npm install
         shell: pwsh
 
-      - name: Build Electron installer
+      - name: Build Electron portable exe
         run: cd desktop && npx electron-builder --win --x64 --publish never
         shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          WIN_CSC_LINK: ""
 
       - name: Publish to GitHub Releases
         uses: softprops/action-gh-release@v2

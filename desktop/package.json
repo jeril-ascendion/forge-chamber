@@ -9,8 +9,7 @@
     "test": "echo \"No tests yet\" && exit 0"
   },
   "dependencies": {
-    "electron-updater": "^6.3.4",
-    "keytar": "^7.9.0"
+    "electron-updater": "^6.3.4"
   },
   "devDependencies": {
     "electron": "^28.3.3",
@@ -36,26 +35,22 @@
       }
     ],
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
-      "icon": "assets/icon.ico"
+      "target": [{ "target": "portable", "arch": ["x64"] }],
+      "icon": "assets/icon.png",
+      "forceCodeSigning": false
     },
     "mac": {
       "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
       "icon": "assets/icon.png"
     },
-    "nsis": {
-      "oneClick": true,
-      "perMachine": false,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Forge Chamber",
-      "installerIcon": "assets/icon.ico",
-      "uninstallerIcon": "assets/icon.ico"
+    "portable": {
+      "artifactName": "Forge-Chamber-${version}.exe"
     },
     "publish": {
       "provider": "github",
       "owner": "jeril-ascendion",
-      "repo": "forge-chamber"
+      "repo": "forge-chamber",
+      "verifyUpdateCodeSignature": false
     }
   }
 }
