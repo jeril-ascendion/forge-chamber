@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron')
 const { autoUpdater } = require('electron-updater')
-const keytar = require('electron-keytar')
+const keytar = require('keytar')
 const { spawn } = require('child_process')
 const path = require('path')
 const fs = require('fs')
