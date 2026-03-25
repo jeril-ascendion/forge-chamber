@@ -1,8 +1,18 @@
+import io
 import logging
+import os
 import signal
 import sys
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+
+# Fix for PyInstaller bundled exe with console=False:
+# sys.stdout/stderr are None when there's no console window.
+# Uvicorn's logger crashes on sys.stdout.isatty(). Redirect to devnull.
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w")
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w")
 
 import uvicorn
 from fastapi import FastAPI, Request
