@@ -26,8 +26,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          cd backend
-          python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing
+          python -m pytest backend/tests/ -v --cov=backend --cov-report=xml --cov-report=term-missing
         env:
           FORGE_DATA_DIR: /tmp/forge-test
           FORGE_PORT: "8765"

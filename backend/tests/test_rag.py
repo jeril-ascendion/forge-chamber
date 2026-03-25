@@ -1,18 +1,14 @@
 """Tests for the RAG pipeline: ingestion, retrieval, source management."""
 
-import json
-import os
-import tempfile
-
 import pytest
 
-from backend.rag.embedder import embed, init_embedder
+from backend.rag.embedder import embed, load_embedder
 from backend.rag.retriever import retrieve_context
 
 
 @pytest.fixture(autouse=True)
 def _init_embedder():
-    init_embedder()
+    load_embedder()
 
 
 @pytest.fixture
@@ -23,7 +19,7 @@ def data_dir(tmp_path):
 def test_embed_returns_vectors():
     vecs = embed(["hello world", "test embedding"])
     assert len(vecs) == 2
-    assert len(vecs[0]) == 384  # all-MiniLM-L6-v2 outputs 384-dim
+    assert len(vecs[0]) == 384  # BAAI/bge-small-en-v1.5 outputs 384-dim
 
 
 def test_ingest_file_txt(data_dir):
