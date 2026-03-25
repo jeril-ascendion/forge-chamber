@@ -49,8 +49,7 @@
     "publish": {
       "provider": "github",
       "owner": "jeril-ascendion",
-      "repo": "forge-chamber",
-      "verifyUpdateCodeSignature": false
+      "repo": "forge-chamber"
     }
   }
 }
