@@ -16,7 +16,7 @@ const API_KEY_NAMES = [
   'LIVEKIT_URL',
   'LIVEKIT_API_KEY',
   'LIVEKIT_API_SECRET',
-  'ANTHROPIC_API_KEY',
+  'GROQ_API_KEY',
   'DEEPGRAM_API_KEY',
   'CARTESIA_API_KEY',
 ]
@@ -26,7 +26,7 @@ const LOG_DIR = path.join(DATA_DIR, 'logs')
 
 const SIDECAR_PATH = app.isPackaged
   ? path.join(process.resourcesPath, 'backend', 'forge_chamber.exe')
-  : path.join(__dirname, '..', 'backend', 'dist', 'forge_chamber.exe')
+  : path.join(__dirname, '..', 'backend', 'dist', 'forge_chamber', 'forge_chamber.exe')
 
 const RENDERER_URL = process.env.RENDERER_URL
   || (app.isPackaged
@@ -39,7 +39,7 @@ const RENDERER_URL = process.env.RENDERER_URL
 
 let mainWindow = null
 let sidecarProcess = null
-let sidecarRestartCount = 0
+let sidecarFailed = false
 let isQuitting = false
 let logStream = null
 
@@ -50,6 +50,11 @@ let logStream = null
 function ensureDataDir() {
   fs.mkdirSync(DATA_DIR, { recursive: true })
   fs.mkdirSync(LOG_DIR, { recursive: true })
+}
+
+function logToFile(msg) {
+  const logPath = path.join(LOG_DIR, 'electron.log')
+  fs.appendFileSync(logPath, `${new Date().toISOString()} ${msg}\n`)
 }
 
 function openLogStream() {
@@ -63,6 +68,16 @@ function openLogStream() {
 // ---------------------------------------------------------------------------
 
 function startSidecar() {
+  logToFile(`Starting sidecar: ${SIDECAR_PATH}`)
+  logToFile(`Sidecar exists: ${fs.existsSync(SIDECAR_PATH)}`)
+
+  if (!fs.existsSync(SIDECAR_PATH)) {
+    logToFile(`ERROR: Sidecar not found at ${SIDECAR_PATH}`)
+    logToFile(`Resources dir contents: ${fs.existsSync(path.dirname(SIDECAR_PATH)) ? fs.readdirSync(path.dirname(SIDECAR_PATH)).join(', ') : 'DIR NOT FOUND'}`)
+    sidecarFailed = true
+    return
+  }
+
   openLogStream()
 
   sidecarProcess = spawn(SIDECAR_PATH, [], {
@@ -83,7 +98,13 @@ function startSidecar() {
     if (logStream) logStream.write(data)
   })
 
+  sidecarProcess.on('error', (err) => {
+    logToFile(`Sidecar spawn error: ${err.message}`)
+    sidecarFailed = true
+  })
+
   sidecarProcess.on('exit', (code, signal) => {
+    logToFile(`Sidecar exited: code=${code} signal=${signal}`)
     if (logStream) {
       logStream.write(`\n--- Sidecar exited: code=${code} signal=${signal} ---\n`)
       logStream.end()
@@ -91,33 +112,26 @@ function startSidecar() {
     }
     sidecarProcess = null
 
-    if (isQuitting) return
-
-    // Auto-restart once on unexpected exit
-    if (sidecarRestartCount < 1) {
-      sidecarRestartCount++
-      console.log('Sidecar exited unexpectedly, restarting...')
-      startSidecar()
-      waitForSidecar()
-        .then(() => {
-          if (mainWindow) mainWindow.webContents.send('sidecar-restarted')
-        })
-        .catch(() => {
-          if (mainWindow) mainWindow.webContents.send('sidecar-failed')
-        })
-    } else {
-      console.error('Sidecar failed twice, not restarting.')
+    // Do NOT auto-restart — it causes process bombs.
+    // Just mark as failed and let the UI handle it.
+    if (!isQuitting) {
+      sidecarFailed = true
       if (mainWindow) mainWindow.webContents.send('sidecar-failed')
     }
   })
 }
 
-function waitForSidecar(retries = 30) {
+function waitForSidecar(retries = 60) {
   return new Promise((resolve, reject) => {
     const check = (n) => {
+      if (sidecarFailed) {
+        reject(new Error('Sidecar failed to start'))
+        return
+      }
       http.get(`http://127.0.0.1:${PORT}/health`, (res) => {
         if (res.statusCode === 200) {
           res.resume()
+          logToFile('Sidecar health check passed')
           resolve()
         } else {
           res.resume()
@@ -126,7 +140,7 @@ function waitForSidecar(retries = 30) {
         }
       }).on('error', () => {
         if (n > 0) setTimeout(() => check(n - 1), 500)
-        else reject(new Error('Sidecar not responding'))
+        else reject(new Error('Sidecar not responding after 30s'))
       })
     }
     check(retries)
@@ -175,6 +189,13 @@ async function startup() {
   ensureDataDir()
   createWindow()
 
+  logToFile('=== App starting ===')
+  logToFile(`isPackaged: ${app.isPackaged}`)
+  logToFile(`resourcesPath: ${process.resourcesPath}`)
+  logToFile(`SIDECAR_PATH: ${SIDECAR_PATH}`)
+  logToFile(`RENDERER_URL: ${RENDERER_URL}`)
+  logToFile(`DATA_DIR: ${DATA_DIR}`)
+
   // Show splash screen immediately
   mainWindow.loadFile(path.join(__dirname, 'splash.html'))
   mainWindow.show()
@@ -182,11 +203,25 @@ async function startup() {
   // Start and wait for sidecar
   try {
     startSidecar()
-    await waitForSidecar()
-    sidecarRestartCount = 0
+    if (!sidecarFailed) {
+      await waitForSidecar()
+    }
   } catch (err) {
-    console.error('Sidecar startup failed:', err.message)
-    // Show error in splash — renderer will handle it
+    logToFile(`Sidecar startup failed: ${err.message}`)
+  }
+
+  if (sidecarFailed) {
+    logToFile('Sidecar failed — showing error page')
+    const errorHtml = `data:text/html,
+      <html><body style="background:#0F0F14;color:#F0EFE8;font-family:sans-serif;padding:40px;text-align:center">
+        <h1 style="color:#E8533A">Sidecar Failed to Start</h1>
+        <p>The backend engine could not start.</p>
+        <p style="color:#888">Check the log at:<br><code>${LOG_DIR.replace(/\\/g, '/')}</code></p>
+        <p style="color:#888;margin-top:20px">Sidecar path: <code>${SIDECAR_PATH.replace(/\\/g, '/')}</code></p>
+        <p style="color:#888">Exists: ${fs.existsSync(SIDECAR_PATH)}</p>
+      </body></html>`
+    mainWindow.loadURL(errorHtml)
+    return
   }
 
   // Load the renderer
@@ -240,8 +275,8 @@ ipcMain.handle('get-api-keys', async () => {
 })
 
 ipcMain.handle('has-api-keys', async () => {
-  const anthropicKey = await keytar.getPassword(KEYTAR_SERVICE, 'ANTHROPIC_API_KEY')
-  return !!anthropicKey
+  const groqKey = await keytar.getPassword(KEYTAR_SERVICE, 'GROQ_API_KEY')
+  return !!groqKey
 })
 
 // ---------------------------------------------------------------------------
@@ -277,13 +312,13 @@ function setupAutoUpdater() {
   })
 
   autoUpdater.on('error', (err) => {
-    console.error('Auto-updater error:', err.message)
+    logToFile(`Auto-updater error: ${err.message}`)
   })
 
   // Check for updates 10 seconds after ready
   setTimeout(() => {
     autoUpdater.checkForUpdates().catch((err) => {
-      console.error('Update check failed:', err.message)
+      logToFile(`Update check failed: ${err.message}`)
     })
   }, 10_000)
 }
