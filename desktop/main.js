@@ -1,6 +1,5 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, Menu, safeStorage } = require('electron')
 const { autoUpdater } = require('electron-updater')
-const keytar = require('keytar')
 const { spawn } = require('child_process')
 const path = require('path')
 const fs = require('fs')
@@ -11,7 +10,6 @@ const http = require('http')
 // ---------------------------------------------------------------------------
 
 const PORT = 8765
-const KEYTAR_SERVICE = 'ForgeChamber'
 const API_KEY_NAMES = [
   'LIVEKIT_URL',
   'LIVEKIT_API_KEY',
@@ -255,28 +253,49 @@ ipcMain.handle('get-data-dir', () => {
 })
 
 // ---------------------------------------------------------------------------
-// IPC handlers — API key storage (keytar)
+// IPC handlers — API key storage (Electron safeStorage + local file)
 // ---------------------------------------------------------------------------
 
+const KEYS_FILE = path.join(DATA_DIR, 'keys.enc')
+
+function loadKeys() {
+  try {
+    if (!fs.existsSync(KEYS_FILE)) return {}
+    const encrypted = fs.readFileSync(KEYS_FILE)
+    const decrypted = safeStorage.decryptString(encrypted)
+    return JSON.parse(decrypted)
+  } catch {
+    return {}
+  }
+}
+
+function saveKeys(keys) {
+  const encrypted = safeStorage.encryptString(JSON.stringify(keys))
+  fs.writeFileSync(KEYS_FILE, encrypted)
+}
+
 ipcMain.handle('save-api-keys', async (_event, keys) => {
+  const stored = loadKeys()
   for (const name of API_KEY_NAMES) {
     if (keys[name] !== undefined) {
-      await keytar.setPassword(KEYTAR_SERVICE, name, keys[name])
+      stored[name] = keys[name]
     }
   }
+  saveKeys(stored)
 })
 
 ipcMain.handle('get-api-keys', async () => {
+  const stored = loadKeys()
   const keys = {}
   for (const name of API_KEY_NAMES) {
-    keys[name] = await keytar.getPassword(KEYTAR_SERVICE, name) || ''
+    keys[name] = stored[name] || ''
   }
   return keys
 })
 
 ipcMain.handle('has-api-keys', async () => {
-  const groqKey = await keytar.getPassword(KEYTAR_SERVICE, 'GROQ_API_KEY')
-  return !!groqKey
+  const stored = loadKeys()
+  return !!stored['GROQ_API_KEY']
 })
 
 // ---------------------------------------------------------------------------
