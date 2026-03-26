@@ -6,7 +6,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readFile: (filePath) => ipcRenderer.invoke('read-file', filePath),
   getDataDir: () => ipcRenderer.invoke('get-data-dir'),
 
-  // API key storage (keytar)
+  // API key storage (safeStorage)
   saveApiKeys: (keys) => ipcRenderer.invoke('save-api-keys', keys),
   getApiKeys: () => ipcRenderer.invoke('get-api-keys'),
   hasApiKeys: () => ipcRenderer.invoke('has-api-keys'),
