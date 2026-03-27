@@ -12,7 +12,7 @@ datas, binaries, hiddenimports = [], [], []
 # Skip heavy ML packages — they work fine with just hiddenimports.
 for pkg in [
     'fastapi', 'uvicorn', 'pydantic', 'pydantic_settings',
-    'sqlalchemy', 'chromadb', 'openai',
+    'sqlalchemy', 'chromadb', 'openai', 'numpy',
 ]:
     try:
         d, b, h = collect_all(pkg)
