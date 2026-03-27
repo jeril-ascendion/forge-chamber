@@ -62,13 +62,8 @@ a = Analysis(
         'backend.api.routes.progress',
     ],
     noarchive=False,
-    optimize=1,
+    optimize=0,
 )
-
-# Exclude test and dev-only packages from the bundle
-a.binaries = [b for b in a.binaries if not any(
-    x in b[0].lower() for x in ['pytest', 'coverage', '_test', 'test_']
-)]
 
 pyz = PYZ(a.pure)
 
