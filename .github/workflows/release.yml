@@ -24,14 +24,33 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
 
+      - name: Extract version from tag
+        id: version
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $ver = $tag -replace '^v', ''
+          echo "VERSION=$ver" >> $env:GITHUB_OUTPUT
+          echo "Version: $ver"
+        shell: pwsh
+
+      - name: Sync version into desktop/package.json
+        run: |
+          cd desktop
+          $pkg = Get-Content package.json -Raw | ConvertFrom-Json
+          $pkg.version = "${{ steps.version.outputs.VERSION }}"
+          $pkg | ConvertTo-Json -Depth 10 | Set-Content package.json -Encoding UTF8
+          echo "desktop/package.json version set to ${{ steps.version.outputs.VERSION }}"
+        shell: pwsh
+
       - name: Install Visual C++ Redistributable
         run: choco install vcredist140 -y
         shell: pwsh
 
-      - name: Install Python dependencies
+      - name: Install Python dependencies (excluding test packages)
         run: |
           cd backend
-          pip install -r requirements.txt
+          Get-Content requirements.txt | Where-Object { $_ -notmatch '^(pytest|pytest-asyncio|pytest-cov|httpx)' } | Set-Content requirements-prod.txt
+          pip install -r requirements-prod.txt
           pip install pyinstaller==6.9.0
         shell: pwsh
 
@@ -40,6 +59,10 @@ jobs:
         with:
           path: backend/build
           key: pyinstaller-${{ runner.os }}-${{ hashFiles('backend/requirements.txt') }}
+
+      - name: Install UPX for binary compression
+        run: choco install upx -y
+        shell: pwsh
 
       - name: Build Python sidecar with PyInstaller
         run: |
@@ -67,7 +90,7 @@ jobs:
         run: cd desktop && npm install
         shell: pwsh
 
-      - name: Build Electron portable exe
+      - name: Build Electron NSIS installer
         run: cd desktop && npx electron-builder --win --x64 --publish never
         shell: pwsh
         env:

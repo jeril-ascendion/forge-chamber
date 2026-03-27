@@ -62,8 +62,13 @@ a = Analysis(
         'backend.api.routes.progress',
     ],
     noarchive=False,
-    optimize=0,
+    optimize=1,
 )
+
+# Exclude test and dev-only packages from the bundle
+a.binaries = [b for b in a.binaries if not any(
+    x in b[0].lower() for x in ['pytest', 'coverage', '_test', 'test_']
+)]
 
 pyz = PYZ(a.pure)
 
@@ -74,8 +79,9 @@ exe = EXE(
     name='forge_chamber',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=False,
-    upx=False,
+    strip=True,
+    upx=True,
+    upx_exclude=['vcruntime140.dll', 'python3.dll', 'python311.dll'],
     console=False,
     icon='../desktop/assets/icon.ico',
 )
@@ -84,7 +90,8 @@ coll = COLLECT(
     exe,
     a.binaries,
     a.datas,
-    strip=False,
-    upx=False,
+    strip=True,
+    upx=True,
+    upx_exclude=['vcruntime140.dll', 'python3.dll', 'python311.dll'],
     name='forge_chamber',
 )
