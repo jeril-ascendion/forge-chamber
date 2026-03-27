@@ -73,15 +73,16 @@ a.binaries = [b for b in a.binaries if not any(
 pyz = PYZ(a.pure)
 
 # Directory build (not onefile) — much faster on CI
+# UPX disabled — corporate security policies flag UPX-compressed DLLs
+# as invalid memory access. Keep strip=False on Windows (strip breaks .pyd files).
 exe = EXE(
     pyz,
     a.scripts,
     name='forge_chamber',
     debug=False,
     bootloader_ignore_signals=False,
-    strip=True,
-    upx=True,
-    upx_exclude=['vcruntime140.dll', 'python3.dll', 'python311.dll'],
+    strip=False,
+    upx=False,
     console=False,
     icon='../desktop/assets/icon.ico',
 )
@@ -90,8 +91,7 @@ coll = COLLECT(
     exe,
     a.binaries,
     a.datas,
-    strip=True,
-    upx=True,
-    upx_exclude=['vcruntime140.dll', 'python3.dll', 'python311.dll'],
+    strip=False,
+    upx=False,
     name='forge_chamber',
 )

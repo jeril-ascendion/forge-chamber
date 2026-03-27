@@ -60,10 +60,6 @@ jobs:
           path: backend/build
           key: pyinstaller-${{ runner.os }}-${{ hashFiles('backend/requirements.txt') }}
 
-      - name: Install UPX for binary compression
-        run: choco install upx -y
-        shell: pwsh
-
       - name: Build Python sidecar with PyInstaller
         run: |
           cd backend
