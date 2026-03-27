@@ -32,6 +32,11 @@
         "from": "../backend/dist/forge_chamber/",
         "to": "backend/",
         "filter": ["**/*"]
+      },
+      {
+        "from": "../frontend/dist/",
+        "to": "frontend/dist/",
+        "filter": ["**/*"]
       }
     ],
     "win": {

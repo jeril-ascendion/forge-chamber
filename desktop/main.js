@@ -28,7 +28,7 @@ const SIDECAR_PATH = app.isPackaged
 
 const RENDERER_URL = process.env.RENDERER_URL
   || (app.isPackaged
-    ? `file://${path.join(__dirname, '..', 'frontend', 'dist', 'index.html')}`
+    ? `file://${path.join(process.resourcesPath, 'frontend', 'dist', 'index.html')}`
     : 'http://localhost:5173')
 
 // ---------------------------------------------------------------------------
