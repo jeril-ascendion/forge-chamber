@@ -23,7 +23,7 @@ const DATA_DIR = path.join(app.getPath('userData'), 'ForgeChamber')
 const LOG_DIR = path.join(DATA_DIR, 'logs')
 
 const SIDECAR_PATH = app.isPackaged
-  ? path.join(process.resourcesPath, 'backend', 'forge_chamber.exe')
+  ? path.join(process.resourcesPath, 'backend', 'forge_chamber', 'forge_chamber.exe')
   : path.join(__dirname, '..', 'backend', 'dist', 'forge_chamber', 'forge_chamber.exe')
 
 const RENDERER_URL = process.env.RENDERER_URL

@@ -47,7 +47,6 @@ a = Analysis(
         'uvicorn.protocols.http.auto',
         'uvicorn.lifespan',
         'uvicorn.lifespan.on',
-        'fastembed',
         'onnxruntime',
         'langchain',
         'langgraph',
@@ -80,6 +79,7 @@ exe = EXE(
     upx=False,
     console=False,
     icon='../desktop/assets/icon.ico',
+    exclude_binaries=True,
 )
 
 coll = COLLECT(

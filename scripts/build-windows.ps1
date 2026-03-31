@@ -5,6 +5,8 @@
 #   - Node.js 20+
 #   - Python 3.11.9
 #   - PyInstaller 6.9.0 (pip install pyinstaller==6.9.0)
+#
+# Output: desktop/dist/Forge-Chamber-1.0.0.exe (portable, no installer needed)
 
 $ErrorActionPreference = "Stop"
 
@@ -12,7 +14,7 @@ Write-Host "=== Forge Chamber Windows Build ===" -ForegroundColor Cyan
 
 # Disable code signing — we distribute unsigned portable exe
 $env:CSC_IDENTITY_AUTO_DISCOVERY = "false"
-Remove-Item Env:WIN_CSC_LINK -ErrorAction SilentlyContinue
+$env:WIN_CSC_LINK = ""
 
 # Step 1: Build Python sidecar
 Write-Host "`n[1/4] Building Python sidecar..." -ForegroundColor Yellow
@@ -44,10 +46,10 @@ Push-Location desktop
 npm install
 Pop-Location
 
-# Step 4: Build portable exe
+# Step 4: Build portable exe (no code signing, no NSIS installer)
 Write-Host "`n[4/4] Building Electron portable exe..." -ForegroundColor Yellow
 Push-Location desktop
-npx electron-builder --win --x64 --publish never
+npx electron-builder --win portable --x64 --publish never
 Pop-Location
 
 # Report output

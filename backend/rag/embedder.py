@@ -1,33 +1,27 @@
-from fastembed import TextEmbedding
+from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
 import chromadb
-from chromadb import EmbeddingFunction
 from pathlib import Path
 
-_model = None
+_embedding_function = None
 
-def get_model() -> TextEmbedding:
-    global _model
-    if _model is None:
-        _model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
-    return _model
+def get_embedding_function():
+    global _embedding_function
+    if _embedding_function is None:
+        _embedding_function = ONNXMiniLM_L6_V2()
+    return _embedding_function
 
 def embed(texts: list[str]) -> list[list[float]]:
-    model = get_model()
-    return [e.tolist() for e in model.embed(texts)]
-
-class FastEmbedFunction(EmbeddingFunction):
-    def __call__(self, input: list[str]) -> list[list[float]]:
-        return embed(input)
+    ef = get_embedding_function()
+    return ef(texts)
 
 def get_chroma_collection(data_dir: str):
     Path(f"{data_dir}/chroma").mkdir(parents=True, exist_ok=True)
     client = chromadb.PersistentClient(path=f"{data_dir}/chroma")
     return client.get_or_create_collection(
         name="forge_context",
-        embedding_function=FastEmbedFunction()
+        embedding_function=get_embedding_function()
     )
 
 def load_embedder():
-    """Called at startup to warm up the model."""
-    get_model()
-    print("Embedder loaded (fastembed BAAI/bge-small-en-v1.5)")
+    get_embedding_function()
+    print("Embedder loaded (ChromaDB ONNX MiniLM-L6-v2)")

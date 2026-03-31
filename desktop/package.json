@@ -30,7 +30,7 @@
     "extraResources": [
       {
         "from": "../backend/dist/forge_chamber/",
-        "to": "backend/",
+        "to": "backend/forge_chamber/",
         "filter": ["**/*"]
       },
       {
@@ -40,19 +40,17 @@
       }
     ],
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [{ "target": "portable", "arch": ["x64"] }],
       "icon": "assets/icon.png",
-      "forceCodeSigning": false
+      "forceCodeSigning": false,
+      "verifyUpdateCodeSignature": false
     },
     "mac": {
       "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
       "icon": "assets/icon.png"
     },
-    "nsis": {
-      "oneClick": true,
-      "perMachine": false,
-      "allowToChangeInstallationDirectory": false,
-      "artifactName": "Forge-Chamber-Setup-${version}.exe"
+    "portable": {
+      "artifactName": "Forge-Chamber-${version}.exe"
     },
     "publish": {
       "provider": "github",
