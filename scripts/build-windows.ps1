@@ -14,7 +14,7 @@ Write-Host "=== Forge Chamber Windows Build ===" -ForegroundColor Cyan
 
 # Disable code signing — we distribute unsigned portable exe
 $env:CSC_IDENTITY_AUTO_DISCOVERY = "false"
-$env:WIN_CSC_LINK = ""
+Remove-Item Env:WIN_CSC_LINK -ErrorAction SilentlyContinue
 
 # Step 1: Build Python sidecar
 Write-Host "`n[1/4] Building Python sidecar..." -ForegroundColor Yellow
