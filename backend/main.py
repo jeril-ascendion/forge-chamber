@@ -3,8 +3,17 @@ import logging
 import os
 import signal
 import sys
+import types
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+
+# PyInstaller compatibility: create a virtual "backend" package so that
+# `from backend.xxx` imports work inside the frozen bundle where modules
+# are at the top level. Must run before ANY backend imports.
+if getattr(sys, "frozen", False):
+    _backend_mod = types.ModuleType("backend")
+    _backend_mod.__path__ = [os.path.dirname(os.path.abspath(__file__))]
+    sys.modules["backend"] = _backend_mod
 
 # Fix for PyInstaller bundled exe with console=False:
 # sys.stdout/stderr are None when there's no console window.
@@ -57,7 +66,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — localhost only
+# CORS — allow localhost (dev) and file:// (packaged Electron sends origin "null")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -65,6 +74,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://localhost:8765",
         "http://127.0.0.1:8765",
+        "null",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -101,7 +111,7 @@ signal.signal(signal.SIGTERM, _handle_sigterm)
 if __name__ == "__main__":
     is_bundled = getattr(sys, "frozen", False)
     uvicorn.run(
-        "backend.main:app",
+        "main:app" if is_bundled else "backend.main:app",
         host="127.0.0.1",
         port=settings.forge_port,
         reload=not is_bundled,
