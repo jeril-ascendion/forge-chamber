@@ -111,7 +111,7 @@ signal.signal(signal.SIGTERM, _handle_sigterm)
 if __name__ == "__main__":
     is_bundled = getattr(sys, "frozen", False)
     uvicorn.run(
-        "main:app" if is_bundled else "backend.main:app",
+        app if is_bundled else "backend.main:app",
         host="127.0.0.1",
         port=settings.forge_port,
         reload=not is_bundled,
